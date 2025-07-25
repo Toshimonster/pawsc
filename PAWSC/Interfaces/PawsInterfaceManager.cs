@@ -29,7 +29,7 @@ public class PawsInterfaceManager
         
         foreach (var inter in Interfaces.Values)
         {
-            int byteSize = inter.GetByteSize(); 
+            int byteSize = inter.GetByteSize();
             ArraySegment<Byte> dataSegment = new ArraySegment<Byte>(data, offset, byteSize);
             offset += byteSize;
             inter.Accept(dataSegment);
