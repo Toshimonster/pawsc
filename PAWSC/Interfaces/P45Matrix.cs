@@ -4,7 +4,7 @@ namespace PAWSC.Interfaces;
 
 public class P45Matrix : IPawsInterface
 {
-    public void Initialised(PawsRuntime runtime)
+    public void Initialise(PawsRuntime runtime)
     {
         throw new NotImplementedException();
     }
@@ -18,4 +18,6 @@ public class P45Matrix : IPawsInterface
     {
         throw new NotImplementedException();
     }
+    
+    public required string ID { get; set; }
 }

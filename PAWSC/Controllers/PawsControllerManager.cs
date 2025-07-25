@@ -1,16 +1,28 @@
-﻿namespace PAWSC.Controllers;
+﻿using PAWSC.Runtime;
+
+namespace PAWSC.Controllers;
 
 public class PawsControllerManager
 {
-    private readonly Dictionary<String, IPawsController> Controllers = new Dictionary<string, IPawsController>();
+    private readonly Dictionary<string, IPawsController> _controllers = new Dictionary<string, IPawsController>();
     
-    public IPawsController ByID(String id)
+    public IPawsController ById(string id)
     {
-        return Controllers[id];
+        return _controllers[id];
     }
 
     public List<IPawsController> AllInterfaces()
     {
-        return Controllers.Values.ToList();
+        return _controllers.Values.ToList();
+    }
+
+    public void Initialise(PawsRuntime pawsRuntime)
+    {
+        _controllers.Values.ToList().ForEach(controller => controller.Initialise(pawsRuntime));
+    }
+
+    public void Add(IPawsController controller)
+    {
+        _controllers.Add(controller.ID, controller);
     }
 }

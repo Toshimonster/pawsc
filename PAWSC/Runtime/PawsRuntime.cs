@@ -14,26 +14,38 @@ public class PawsRuntime : PawsEventHandler
     public PawsInterfaceManager Interfaces { get; private set; } = new PawsInterfaceManager();
     public PawsControllerManager Controllers { get; private set; } = new PawsControllerManager();
     public PawsSceneManager Scenes { get; private set; } = new PawsSceneManager();
-    public IPawsScene? ActiveScene { get; private set; }
 
+    private PawsDrawingThread _drawThread;
+
+    public PawsRuntime()
+    {
+        _drawThread = new PawsDrawingThread(Interfaces);
+    }
+    
     public void Start()
     {
-
+        Interfaces.Initialise(this);
+        Controllers.Initialise(this);
+        Scenes.Initialise(this);
+        _drawThread.SetScene(Scenes.AllScenes().FirstOrDefault());
+        _drawThread.Start();
     }
 
     class PawsDrawingThread()
     {
         private Thread? _thread;
         private volatile bool _running = false;
-        private volatile IPawsScene _scene;
-        private readonly PawsInterfaceManager _interfaceManager;
+        private volatile IPawsScene? _scene;
+        private readonly PawsInterfaceManager _interfaceManager = null!;
         private readonly int _frameDelayMs;
 
-        public PawsDrawingThread(PawsInterfaceManager mgr, int targetFps = 120)
+        public PawsDrawingThread(PawsInterfaceManager mgr, int targetFps = 120) : this()
         {
             _frameDelayMs = 1000 / targetFps;
             _interfaceManager = mgr;
         }
+        
+        public bool IsRunning => _running;
 
         public void SetScene(IPawsScene newScene) {
             _scene = newScene;
@@ -41,30 +53,31 @@ public class PawsRuntime : PawsEventHandler
 
         public void Start()
         {
-            if (_running) return;
-            _running = true;
+            if(Interlocked.Exchange(ref _running, true)) return;
 
             _thread = new Thread(DrawLoop)
             {
-                IsBackground = true,
+                IsBackground = false,
                 Name = "Paws Drawing Thread"
             };
+            _thread.Start();
         }
 
         public void Stop()
         {
-            _running = false;
+            if(!Interlocked.Exchange(ref _running, false)) return;
+            
             _thread?.Join();
         }
 
-        public async Task DrawLoop()
+        private void DrawLoop()
         {
             long tm1 = 0;
 
             while (_running)
             {
                 var start = DateTime.Now;
-                await _scene.Draw(_interfaceManager, new DrawInfo
+                _scene?.Draw(_interfaceManager, new DrawInfo
                 {
                     Time = start,
                     Deltatime = start.Ticks - tm1
@@ -72,10 +85,10 @@ public class PawsRuntime : PawsEventHandler
 
                 tm1 = start.Ticks;
 
-                var elapsed = (int)(DateTime.Now - start).TotalMilliseconds;
-                int sleepTime = Math.Max(0, _frameDelayMs - elapsed);
+                var elapsed = (DateTime.Now - start).TotalMilliseconds;
+                var sleepTime = Math.Max(0, _frameDelayMs - elapsed);
 
-                Thread.Sleep(sleepTime);
+                Thread.Sleep((int)sleepTime);
             }
         }
     }

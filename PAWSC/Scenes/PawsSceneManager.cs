@@ -1,4 +1,6 @@
-﻿namespace PAWSC.Scenes;
+﻿using PAWSC.Runtime;
+
+namespace PAWSC.Scenes;
 
 public class PawsSceneManager
 {
@@ -15,8 +17,14 @@ public class PawsSceneManager
         return Scenes[id];
     }
 
-    public List<IPawsScene> AllInterfaces()
+    public List<IPawsScene> AllScenes()
     {
         return Scenes.Values.ToList();
+    }
+
+
+    public void Initialise(PawsRuntime pawsRuntime)
+    {
+        Scenes.Values.ToList().ForEach(scene => scene.Initialise(pawsRuntime));
     }
 }
