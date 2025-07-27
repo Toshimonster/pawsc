@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using PAWSC.Runtime;
 
-namespace PAWSC.Interfaces
+namespace PAWSC.Interfaces.Implementations
 {
     /// <summary>
     /// Interface to interact with a framebuffer device on a Linux system.
@@ -10,11 +10,15 @@ namespace PAWSC.Interfaces
     public class FrameBufferInterface(string frameBufferPath, int width, int height) : IPawsInterface
     {
         private string FrameBufferPath { get; } = frameBufferPath;
-        private int Width { get; set; } = width;
-        private int Height { get; set; } = height;
+        public PawsInterfaceInfo InterfaceInfo { get; } = new PawsInterfaceInfo()
+        {
+            Width = width,
+            Height = height,
+            ByteRepresentation = PawsInterfaceInfo.PawsInterfaceByteRepresentation.Rgba
+        };
 
         /// <inheritdoc />
-        public required string ID { get; set; }
+        public required string Id { get; set; }
 
         /// <inheritdoc />
         public void Initialise(PawsRuntime runtime)
@@ -25,28 +29,21 @@ namespace PAWSC.Interfaces
         }
 
         /// <inheritdoc />
-        public void Accept(IList<byte> data)
+        public void Accept(ReadOnlySpan<byte> data)
         {
-            int expectedSize = GetByteSize();
-            if (data.Count != expectedSize)
-                throw new ArgumentException($"Data length ({data.Count}) does not match expected framebuffer size ({expectedSize}).");
+            int expectedSize = InterfaceInfo.GetByteSize();
+            if (data.Length != expectedSize)
+                throw new ArgumentException($"Data length ({data.Length}) does not match expected framebuffer size ({expectedSize}).");
 
             try
             {
                 using var fb = new FileStream(FrameBufferPath, FileMode.Open, FileAccess.Write);
-                fb.Write(data.ToArray(), 0, expectedSize);
+                fb.Write(data);
             }
             catch (Exception ex)
             {
                 throw new IOException($"Failed to write data to framebuffer at '{FrameBufferPath}'.", ex);
             }
-        }
-
-        /// <inheritdoc />
-        public int GetByteSize()
-        {
-            // Assuming 4 bytes per pixel (e.g., 32-bit color depth).
-            return Width * Height * 4;
         }
 
         /// <summary>

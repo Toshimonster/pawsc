@@ -3,9 +3,8 @@ using PAWSC.Scenes;
 
 namespace PAWSC.Controllers;
 
-public interface IPawsController : IIdentifiable
+public interface IPawsController : IIdentifiable, IPawsInitialisable
 {
-    public void Initialise(PawsRuntime runtime);
 }
 
 public abstract class PawsController(string id) : IPawsController
@@ -16,16 +15,5 @@ public abstract class PawsController(string id) : IPawsController
         Runtime = runtime;
     }
 
-    public string ID { get; private set; } = id;
-}
-
-public class TestController(string id) : PawsController(id)
-{
-    public override void Initialise(PawsRuntime runtime)
-    {
-        base.Initialise(runtime);
-        runtime.Scenes?.AddScene(
-            new PulserScene("TEST")
-        );
-    }
+    public string Id { get; private set; } = id;
 }

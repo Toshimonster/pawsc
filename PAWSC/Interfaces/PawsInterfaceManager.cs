@@ -4,23 +4,11 @@ using PAWSC.Runtime;
 
 namespace PAWSC.Interfaces;
 
-public class PawsInterfaceManager
+public class PawsInterfaceManager : PawsItemManager<IPawsInterface>
 {
-    private readonly Dictionary<string, IPawsInterface> _interfaces = new Dictionary<string, IPawsInterface>();
-    
-    public IPawsInterface ById(string id)
-    {
-        return _interfaces[id];
-    }
-
-    public List<IPawsInterface> AllInterfaces()
-    {
-        return _interfaces.Values.ToList();
-    }
-
     public int GetByteSize()
     {
-        return _interfaces.Values.Sum(x => x.GetByteSize());
+        return GetAll().Sum(x => x.InterfaceInfo.GetByteSize());
     }
 
     public void Distribute(byte[] data)
@@ -28,25 +16,12 @@ public class PawsInterfaceManager
         if (data.Length < GetByteSize()) throw new ArgumentException("Data is too small");
         var offset = 0;
         
-        foreach (var inter in _interfaces.Values)
+        foreach (var inter in GetAll())
         {
-            var byteSize = inter.GetByteSize();
+            var byteSize = inter.InterfaceInfo.GetByteSize();
             var dataSegment = new ArraySegment<byte>(data, offset, byteSize);
             offset += byteSize;
             inter.Accept(dataSegment);
         }
-    }
-
-    public void Initialise(PawsRuntime runtime)
-    {
-        foreach (var interfacesValue in _interfaces.Values)
-        {
-            interfacesValue.Initialise(runtime);
-        }
-    }
-
-    public void Add(IPawsInterface pawsInterface)
-    {
-        _interfaces.Add(pawsInterface.ID, pawsInterface);
     }
 }

@@ -1,7 +1,7 @@
 ﻿using PAWSC.Interfaces;
 using PAWSC.Runtime;
 
-namespace PAWSC.Scenes;
+namespace PAWSC.Scenes.Implementations;
 
 public class PulserScene(string name) : BaseScene(name)
 {

@@ -2,11 +2,32 @@
 
 namespace PAWSC.Interfaces;
 
-public interface IPawsInterface : IIdentifiable
+public record PawsInterfaceInfo
 {
-    public void Initialise(PawsRuntime runtime);
-    public void Accept(IList<Byte> data);
-    public int GetByteSize();
+    public int Width { get; init; } = 1;
+    public int Height { get; init; } = 1;
+    public PawsInterfaceByteRepresentation ByteRepresentation { get; init; }
+
+    public enum PawsInterfaceByteRepresentation
+    {
+        [ByteSize(1)]
+        Byte,
+        [ByteSize(3)]
+        Rgb,
+        [ByteSize(4)]
+        Rgba
+    }
+    
+    public int GetByteSize()
+    {
+        return ByteRepresentation.GetBytesPerPixel() * Width * Height;
+    }
+}
+
+public interface IPawsInterface : IIdentifiable, IPawsInitialisable
+{
+    public void Accept(ReadOnlySpan<byte> data);
+    public PawsInterfaceInfo InterfaceInfo { get; }
 }
 
 public readonly struct Pixel(byte r, byte g, byte b, byte a)

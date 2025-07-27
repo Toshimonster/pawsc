@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="Iot.Device.Bindings" Version="4.0.1" />
       <PackageReference Include="SkiaSharp" Version="3.119.0" />
       <PackageReference Include="Spectre.Console" Version="0.50.1-preview.0.22" />
     </ItemGroup>

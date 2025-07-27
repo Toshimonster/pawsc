@@ -1,6 +1,6 @@
 ﻿using PAWSC.Runtime;
 
-namespace PAWSC.Interfaces;
+namespace PAWSC.Interfaces.Implementations;
 
 public class P45Matrix : IPawsInterface
 {
@@ -9,15 +9,17 @@ public class P45Matrix : IPawsInterface
         throw new NotImplementedException();
     }
 
-    public void Accept(IList<byte> data)
+    public void Accept(ReadOnlySpan<byte> data)
     {
         throw new NotImplementedException();
     }
+
+    public required PawsInterfaceInfo InterfaceInfo { get; init; }
 
     public int GetByteSize()
     {
         throw new NotImplementedException();
     }
-    
-    public required string ID { get; set; }
+
+    public required string Id { get; init; }
 }

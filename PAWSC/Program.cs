@@ -1,7 +1,9 @@
 ﻿using System.Runtime.InteropServices;
 using PAWSC;
 using PAWSC.Controllers;
+using PAWSC.Controllers.Implementations;
 using PAWSC.Interfaces;
+using PAWSC.Interfaces.Implementations;
 using PAWSC.Runtime;
 
 class Program
@@ -14,14 +16,14 @@ class Program
         {
             x.Interfaces.Add(new FrameBufferInterface("/dev/fb0", 320, 240)
             {
-                ID = "!"
+                Id = "!"
             });
         }
         else
         {
             x.Interfaces.Add(new TerminalInterface(10, 10)
             {
-                ID = "!"
+                Id = "!"
             });
         }
         

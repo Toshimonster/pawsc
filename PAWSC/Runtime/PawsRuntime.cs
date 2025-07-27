@@ -6,7 +6,12 @@ namespace PAWSC.Runtime;
 
 public interface IIdentifiable
 {
-    public String ID { get; }
+    public string Id { get; }
+}
+
+public interface IPawsInitialisable
+{
+    public void Initialise(PawsRuntime runtime);
 }
 
 public class PawsRuntime : PawsEventHandler
@@ -27,7 +32,7 @@ public class PawsRuntime : PawsEventHandler
         Interfaces.Initialise(this);
         Controllers.Initialise(this);
         Scenes.Initialise(this);
-        _drawThread.SetScene(Scenes.AllScenes().FirstOrDefault());
+        _drawThread.SetScene(Scenes.GetAll().FirstOrDefault());
         _drawThread.Start();
     }
 
@@ -72,7 +77,7 @@ public class PawsRuntime : PawsEventHandler
 
         private void DrawLoop()
         {
-            long tm1 = 0;
+            long tm1 = DateTime.Now.Ticks;
 
             while (_running)
             {
