@@ -11,9 +11,12 @@ public class PulserScene(string name) : BaseScene(name)
     public override void Draw(PawsInterfaceManager mgr, DrawInfo drawInfo)
     {
         var buffer = new byte[_pulsers.Length];
-        for (var i = 0; i < buffer.Length; i++)
+        for (var i = 0; i < buffer.Length; i += 3)
         {
-            buffer[i] = _pulsers[i].GetIntencity(drawInfo.Time.Ticks);
+            var intencity = _pulsers[i / 3].GetIntencity(drawInfo.Time.Ticks);
+            buffer[i] = intencity;
+            buffer[i + 1] = intencity;
+            buffer[i + 2] = intencity;
         }
         mgr.Distribute(buffer);
     }

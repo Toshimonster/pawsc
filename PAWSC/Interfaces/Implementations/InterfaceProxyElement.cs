@@ -23,5 +23,5 @@ public class InterfaceProxyElement<T> : IPawsInterface where T : InterfaceProxyM
         ProxyManager.AcceptProxy(data, this);
     }
 
-    public PawsInterfaceInfo InterfaceInfo { get; } = new PawsInterfaceInfo();
+    public PawsInterfaceInfo InterfaceInfo { get; init; } = new PawsInterfaceInfo();
 }

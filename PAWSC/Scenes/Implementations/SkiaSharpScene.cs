@@ -41,9 +41,12 @@ public abstract class SkiaSharpScene : BaseScene
             
             var encoded = viewImage.PeekPixels().GetPixels();
 
+            var originalLen = viewImage.Width * viewImage.Height * 3;
             var len =  iface.InterfaceInfo.GetByteSize();
             var data = new byte[len];
             System.Runtime.InteropServices.Marshal.Copy(encoded, data, 0, len);
+            
+            data = DropBytes(data, len, 4, 3);
             
             iface.Accept(new ReadOnlySpan<byte>(data));
         }
@@ -92,6 +95,22 @@ public abstract class SkiaSharpScene : BaseScene
             PawsInterfaceInfo.PawsInterfaceByteRepresentation.Rgba => SKColorType.Rgba8888,
             _ => throw new NotImplementedException()
         };
+    }
+
+    private byte[] DropBytes(byte[] from, int size, int bfrom, int bto)
+    {
+        if (bfrom < bto) throw new ArgumentException("bFrom must be >= to bTo");
+        if (bfrom == bto) return from;
+        byte[] toRet = new byte[size];
+        for (int i = 0, j = 0; i < size; i += bto, j += bfrom)
+        {
+            for (int k = 0; k < bto; k++)
+            {
+                toRet[i + k] = from[j + k];
+            }
+        }
+
+        return toRet;
     }
 
     private SKImage ScaleImage(SKImage image, PawsInterfaceInfo ifaceInterfaceInfo)

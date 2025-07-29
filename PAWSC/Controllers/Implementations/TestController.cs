@@ -17,6 +17,7 @@ public class TestController(string id) : PawsController(id)
         );*/
         
         runtime.Scenes?.Add(
+            //new PulserScene("TEST")
             new SpinningCubeScene("TEST")
             //new SpinningCubeAndPrismScene("TEST")
         );
