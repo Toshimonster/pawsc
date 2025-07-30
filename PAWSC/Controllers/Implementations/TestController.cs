@@ -4,7 +4,7 @@ using PAWSC.Scenes.Implementations;
 
 namespace PAWSC.Controllers.Implementations;
 
-public class TestController(string id) : PawsController(id)
+public class TestController(Identifier id) : PawsController(id)
 {
     public override void Initialise(PawsRuntime runtime)
     {
@@ -18,7 +18,7 @@ public class TestController(string id) : PawsController(id)
         
         runtime.Scenes?.Add(
             //new PulserScene("TEST")
-            new SpinningCubeScene("TEST")
+            new SpinningCubeScene(new Identifier("TEST"))
             //new SpinningCubeAndPrismScene("TEST")
         );
     }

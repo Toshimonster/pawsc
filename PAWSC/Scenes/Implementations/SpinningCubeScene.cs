@@ -6,7 +6,7 @@ using SkiaSharp;
 
 namespace PAWSC.Scenes.Implementations;
 
-public class SpinningCubeScene(string name, int width = 255, int height = 255)
+public class SpinningCubeScene(Identifier name, int width = 255, int height = 255)
     : SkiaSharpScene(name, width, height)
 {
     private float _rotationX = 0;
@@ -102,7 +102,7 @@ public class SpinningCubeScene(string name, int width = 255, int height = 255)
         // Draw cube edges
         foreach (var (a, b) in edges)
         {
-            //Canvas.DrawLine(projected[a], projected[b], paint);
+            Canvas.DrawLine(projected[a], projected[b], paint);
         }
 
         // Optionally draw FPS/time text

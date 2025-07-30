@@ -12,7 +12,7 @@ public class TerminalInterface(int width, int height) : IPawsInterface
         Height = height,
         ByteRepresentation = PawsInterfaceInfo.PawsInterfaceByteRepresentation.Rgb
     };
-    public required string Id { get; init; }
+    public required Identifier Id { get; init; }
 
     public void Initialise(PawsRuntime runtime)
     {

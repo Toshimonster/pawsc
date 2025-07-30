@@ -3,7 +3,7 @@ using PAWSC.Runtime;
 
 namespace PAWSC.Scenes.Implementations;
 
-public class PulserScene(string name) : BaseScene(name)
+public class PulserScene(Identifier name) : BaseScene(name)
 {
     private double Frequency { get; set; } = 0.001;
     private PulserLed[] _pulsers = [];

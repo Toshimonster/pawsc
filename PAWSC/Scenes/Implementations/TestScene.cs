@@ -1,8 +1,9 @@
-﻿using SkiaSharp;
+﻿using PAWSC.Runtime;
+using SkiaSharp;
 
 namespace PAWSC.Scenes.Implementations;
 
-public class TestScene(string name, int width = 255, int height = 255, SKColorType colorType = SKColorType.Bgra8888)
+public class TestScene(Identifier name, int width = 255, int height = 255, SKColorType colorType = SKColorType.Bgra8888)
     : SkiaSharpScene(name, width, height, colorType)
 {
     protected override void RenderScene(DrawInfo drawInfo)

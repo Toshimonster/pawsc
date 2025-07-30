@@ -7,7 +7,7 @@ public interface IPawsController : IIdentifiable, IPawsInitialisable
 {
 }
 
-public abstract class PawsController(string id) : IPawsController
+public abstract class PawsController(Identifier id) : IPawsController
 {
     protected PawsRuntime? Runtime { get; private set; }
     public virtual void Initialise(PawsRuntime runtime)
@@ -15,5 +15,5 @@ public abstract class PawsController(string id) : IPawsController
         Runtime = runtime;
     }
 
-    public string Id { get; private set; } = id;
+    public Identifier Id { get; private set; } = id;
 }

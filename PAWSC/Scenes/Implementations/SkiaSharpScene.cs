@@ -11,7 +11,7 @@ public abstract class SkiaSharpScene : BaseScene
     protected SKSurface Surface { get; }
     protected SKCanvas Canvas => Surface.Canvas;
 
-    protected SkiaSharpScene(string name, int width = 255, int height = 255, SKColorType colorType = SKColorType.Bgra8888) : base(name)
+    protected SkiaSharpScene(Identifier name, int width = 255, int height = 255, SKColorType colorType = SKColorType.Bgra8888) : base(name)
     {
         SceneImageInfo = new SKImageInfo(width, height, colorType);
         Surface = SKSurface.Create(SceneImageInfo);
@@ -41,12 +41,13 @@ public abstract class SkiaSharpScene : BaseScene
             
             var encoded = viewImage.PeekPixels().GetPixels();
 
-            var originalLen = viewImage.Width * viewImage.Height * 3;
+            var originalLen = viewImage.Width * viewImage.Height * 4;
             var len =  iface.InterfaceInfo.GetByteSize();
-            var data = new byte[len];
-            System.Runtime.InteropServices.Marshal.Copy(encoded, data, 0, len);
+            var interfaceBytes = iface.InterfaceInfo.ByteRepresentation.GetBytesPerPixel();
+            var data = new byte[originalLen];
+            System.Runtime.InteropServices.Marshal.Copy(encoded, data, 0, originalLen);
             
-            data = DropBytes(data, len, 4, 3);
+            data = DropBytes(data, len, 4, interfaceBytes);
             
             iface.Accept(new ReadOnlySpan<byte>(data));
         }

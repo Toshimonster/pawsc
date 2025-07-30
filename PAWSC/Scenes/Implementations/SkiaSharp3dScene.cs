@@ -57,7 +57,7 @@ public abstract class SkiaSharp3DScene : SkiaSharpScene
         };
     }
 
-    protected SkiaSharp3DScene(string name, int width = 255, int height = 255)
+    protected SkiaSharp3DScene(Identifier name, int width = 255, int height = 255)
         : base(name, width, height)
     {
     }
@@ -210,7 +210,7 @@ public class SpinningCubeAndPrismScene : SkiaSharp3DScene
     private Mesh? _cubeMesh;
     private Mesh? _prismMesh;
 
-    public SpinningCubeAndPrismScene(string name, int width = 255, int height = 255)
+    public SpinningCubeAndPrismScene(Identifier name, int width = 255, int height = 255)
         : base(name, width, height)
     {
     }

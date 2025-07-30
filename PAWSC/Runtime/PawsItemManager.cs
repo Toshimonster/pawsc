@@ -4,7 +4,7 @@ namespace PAWSC.Runtime;
 
 public abstract class PawsItemManager<T> : IPawsInitialisable where T : IIdentifiable, IPawsInitialisable
 {
-    private readonly Dictionary<string, T> _items = new Dictionary<string, T>();
+    private readonly Dictionary<Identifier, T> _items = new Dictionary<Identifier, T>();
 
     public bool Add(T item)
     {
@@ -16,7 +16,7 @@ public abstract class PawsItemManager<T> : IPawsInitialisable where T : IIdentif
         return _items.Remove(item.Id);
     }
 
-    public T ById(string id)
+    public T? ById(Identifier id)
     {
         return _items[id];
     }

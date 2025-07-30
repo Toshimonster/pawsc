@@ -21,5 +21,5 @@ public class P45Matrix : IPawsInterface
         throw new NotImplementedException();
     }
 
-    public required string Id { get; init; }
+    public required Identifier Id { get; init; }
 }

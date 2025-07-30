@@ -4,10 +4,10 @@ namespace PAWSC.Interfaces.Implementations
 {
     public abstract class InterfaceProxyManager<T> : IPawsInterface where T : InterfaceProxyManager<T>
     {
-        public string Id { get; private set; }
+        public Identifier Id { get; private set; }
         public IList<InterfaceProxyElement<T>> ProxyElements { get; } = new List<InterfaceProxyElement<T>>();
 
-        protected InterfaceProxyManager(string name)
+        protected InterfaceProxyManager(Identifier name)
         {
             Id = name;
         }
@@ -18,6 +18,7 @@ namespace PAWSC.Interfaces.Implementations
             foreach (var interfaceProxyElement in ProxyElements)
             {
                 interfaceProxyElement.Initialise(runtime);
+                runtime.Interfaces.Add(interfaceProxyElement);
             }
         }
 
@@ -28,7 +29,7 @@ namespace PAWSC.Interfaces.Implementations
 
         public abstract void AcceptProxy(ReadOnlySpan<byte> data, InterfaceProxyElement<T> test);
 
-        public PawsInterfaceInfo InterfaceInfo { get; } = new PawsInterfaceInfo();
+        public virtual PawsInterfaceInfo InterfaceInfo { get; } = new PawsInterfaceInfo();
 
         public int ByteSize => ProxyElements.Sum(e => e.InterfaceInfo.GetByteSize());
     }
@@ -38,35 +39,49 @@ namespace PAWSC.Interfaces.Implementations
         public T Interface;
         public byte[] Bytes;
         public int SpacerSizeBytes;
-        public ToshiProtogenProxy(string name, T rawInterface): base(name)
+        public ToshiProtogenProxy(Identifier name, T rawInterface): base(name)
         {
             Interface = rawInterface;
             
             ProxyElements.Add(
-                new InterfaceProxyElement<ToshiProtogenProxy<T>>("LEFT_P45", this)
+                new InterfaceProxyElement<ToshiProtogenProxy<T>>(new Identifier("LEFT_P45"), this)
                 {
                     InterfaceInfo = new PawsInterfaceInfo()
                     {
-                        Width = 128,
-                        Height = 64,
+                        Width = ToshiProtogenProxy<T>.Width,
+                        Height = (ToshiProtogenProxy<T>.Height - 1) / 2,
                         ByteRepresentation = PawsInterfaceInfo.PawsInterfaceByteRepresentation.Rgb
                     }
                 }
             );
             ProxyElements.Add(
-                new InterfaceProxyElement<ToshiProtogenProxy<T>>("RIGHT_P45", this)
+                new InterfaceProxyElement<ToshiProtogenProxy<T>>(new Identifier("RIGHT_P45"), this)
                 {
                     InterfaceInfo = new PawsInterfaceInfo()
                     {
-                        Width = 128,
-                        Height = 64,
+                        Width = ToshiProtogenProxy<T>.Width,
+                        Height = (ToshiProtogenProxy<T>.Height - 1) / 2,
                         ByteRepresentation = PawsInterfaceInfo.PawsInterfaceByteRepresentation.Rgb
                     }
                 }
             );
-            SpacerSizeBytes = 128 * 3;
+            SpacerSizeBytes = ToshiProtogenProxy<T>.Width * 3;
+            
+            Bytes = new byte[rawInterface.InterfaceInfo.GetByteSize()];
 
-            Bytes = new byte[ByteSize + (SpacerSizeBytes * (ProxyElements.Count - 1))];
+            PopulateSpacers(30);
+        }
+
+        private void PopulateSpacers(byte color = 255)
+        {
+            if (ProxyElements.Count <= 0) return;
+            int start = ProxyElements[0].InterfaceInfo.GetByteSize();
+            for (int i = 1; i < ProxyElements.Count; i++)
+            {
+                int byteSize = ProxyElements[i].InterfaceInfo.GetByteSize();
+                new Span<byte>(Bytes, start, byteSize).Fill(color);
+                start += byteSize;
+            }
         }
 
         public override void AcceptProxy(ReadOnlySpan<byte> data, InterfaceProxyElement<ToshiProtogenProxy<T>> test)
@@ -86,5 +101,9 @@ namespace PAWSC.Interfaces.Implementations
             data.CopyTo(toEdit);
             Interface.Accept(Bytes);
         }
+
+        public override PawsInterfaceInfo InterfaceInfo => Interface.InterfaceInfo;
+        public static int Width => 64 * 2;
+        public static int Height => 42 + 42 + 1;
     }
 }

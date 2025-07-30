@@ -4,9 +4,13 @@ using PAWSC.Scenes;
 
 namespace PAWSC.Runtime;
 
+public struct Identifier(string id)
+{
+    private string Id { get; init; } = id;
+}
 public interface IIdentifiable
 {
-    public string Id { get; }
+    public Identifier Id { get; }
 }
 
 public interface IPawsInitialisable

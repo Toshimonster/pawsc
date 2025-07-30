@@ -4,12 +4,12 @@ namespace PAWSC.Interfaces.Implementations;
 
 public class InterfaceProxyElement<T> : IPawsInterface where T : InterfaceProxyManager<T>
 {
-    public string Id { get; }
+    public Identifier Id { get; }
     public T ProxyManager { get; }
 
-    public InterfaceProxyElement(string name, T mgr)
+    public InterfaceProxyElement(Identifier identifier, T mgr)
     {
-        Id = name;
+        Id = identifier;
         ProxyManager = mgr;
     }
 

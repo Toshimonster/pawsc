@@ -18,7 +18,7 @@ namespace PAWSC.Interfaces.Implementations
         };
 
         /// <inheritdoc />
-        public required string Id { get; set; }
+        public required Identifier Id { get; set; }
 
         /// <inheritdoc />
         public void Initialise(PawsRuntime runtime)
