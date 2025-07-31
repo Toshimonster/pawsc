@@ -13,11 +13,11 @@ class Program
     {
         var x = new PawsRuntime();
 
-        if (false && File.Exists("/dev/fb0"))
+        if (File.Exists("/dev/fb0"))
         {
             x.Interfaces.Add(new FrameBufferInterface("/dev/fb0", 320, 240)
             {
-                Id = new Identifier("!")
+                Id = new Identifier("LEFT_P45")
             });
         }
         else

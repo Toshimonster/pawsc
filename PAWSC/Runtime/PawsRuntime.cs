@@ -1,13 +1,21 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Security.Cryptography;
 using PAWSC.Controllers;
 using PAWSC.Interfaces;
 using PAWSC.Scenes;
 
 namespace PAWSC.Runtime;
 
-public struct Identifier(string id)
+public struct Identifier(string id) : IEquatable<Identifier>
 {
     private string Id { get; init; } = id;
+
+    public static Identifier Random()
+    {
+        return new Identifier() {
+            Id = RandomNumberGenerator.GetString("abcdefghijklmnopqrstuvwxyz1234567890", 5)
+        };
+    }
 
     public override string ToString()
     {
@@ -19,16 +27,17 @@ public struct Identifier(string id)
         return Id.GetHashCode();
     }
 
-    public override bool Equals([NotNullWhen(true)] object? obj)
+    public bool Equals(Identifier other)
     {
-        if (obj is Identifier id)
-        {
-            return Id.Equals(id.Id);
-        }
+        return Id == other.Id;
+    }
 
-        return false;
+    public override bool Equals(object? obj)
+    {
+        return obj is Identifier other && Equals(other);
     }
 }
+
 public interface IIdentifiable
 {
     public Identifier Id { get; }
@@ -51,7 +60,7 @@ public class PawsRuntime : PawsEventHandler
     {
         _drawThread = new PawsDrawingThread(Interfaces);
     }
-    
+
     public void Start()
     {
         Interfaces.Initialise(this);
@@ -74,17 +83,20 @@ public class PawsRuntime : PawsEventHandler
             _frameDelayMs = 1000 / targetFps;
             _interfaceManager = mgr;
         }
-        
+
         public bool IsRunning => _running;
 
-        public void SetScene(IPawsScene newScene) {
+        public void SetScene(IPawsScene newScene)
+        {
             _scene = newScene;
         }
 
         public void Start()
         {
-            if(Interlocked.Exchange(ref _running, true)) return;
+            if (Interlocked.Exchange(ref _running, true)) return;
 
+            Console.CancelKeyPress += HandleCancelKeyPress;
+            
             _thread = new Thread(DrawLoop)
             {
                 IsBackground = false,
@@ -93,32 +105,49 @@ public class PawsRuntime : PawsEventHandler
             _thread.Start();
         }
 
+        private void HandleCancelKeyPress(object? sender, ConsoleCancelEventArgs e)
+        {
+            Console.WriteLine("Cleaning up...");
+            e.Cancel = true;
+            Stop();
+            Environment.Exit(0);
+        }
+
+
         public void Stop()
         {
-            if(!Interlocked.Exchange(ref _running, false)) return;
-            
+            if (!Interlocked.Exchange(ref _running, false)) return;
+
             _thread?.Join();
         }
 
         private void DrawLoop()
         {
-            long tm1 = DateTime.Now.Ticks;
-
-            while (_running)
+            try
             {
-                var start = DateTime.Now;
-                _scene?.Draw(_interfaceManager, new DrawInfo
+                long tm1 = DateTime.Now.Ticks;
+
+                while (_running)
                 {
-                    Time = start,
-                    Deltatime = start.Ticks - tm1
-                });
+                    var start = DateTime.Now;
+                    _scene?.Draw(_interfaceManager, new DrawInfo
+                    {
+                        Time = start,
+                        Deltatime = start.Ticks - tm1
+                    });
 
-                tm1 = start.Ticks;
+                    tm1 = start.Ticks;
 
-                var elapsed = (DateTime.Now - start).TotalMilliseconds;
-                var sleepTime = Math.Max(0, _frameDelayMs - elapsed);
+                    var elapsed = (DateTime.Now - start).TotalMilliseconds;
+                    var sleepTime = Math.Max(0, _frameDelayMs - elapsed);
 
-                Thread.Sleep((int)sleepTime);
+                    Thread.Sleep((int)sleepTime);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception in DrawLoop: " + ex);
+                Environment.Exit(-1);
             }
         }
     }

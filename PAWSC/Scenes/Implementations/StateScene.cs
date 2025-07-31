@@ -35,7 +35,7 @@ public class StateScene : SkiaSharpRasterScene
         {
             [new Identifier("LEFT_P45")] = new PawsGif()
             {
-                Codec = SKCodec.Create("/home/toshi/Documents/Personal/Proto/ToshiProto/face_blink_shine.gif")
+                Codec = SKCodec.Create("./start.gif")
             }
         };
         AddState(new BaseState(new Identifier("Test"), dict));
@@ -105,6 +105,7 @@ public class StateScene : SkiaSharpRasterScene
     private int GetFrameIndex(long timeMs, SKCodecFrameInfo[] frames)
     {
         long totalDuration = frames.Sum(f => f.Duration);
+        if (totalDuration == 0) throw new ArgumentException("Frames cannot have a 0 duration");
         long time = (timeMs) % (totalDuration);
 
         long accumulated = 0;
