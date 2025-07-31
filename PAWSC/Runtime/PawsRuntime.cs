@@ -1,4 +1,5 @@
-﻿using PAWSC.Controllers;
+﻿using System.Diagnostics.CodeAnalysis;
+using PAWSC.Controllers;
 using PAWSC.Interfaces;
 using PAWSC.Scenes;
 
@@ -7,6 +8,26 @@ namespace PAWSC.Runtime;
 public struct Identifier(string id)
 {
     private string Id { get; init; } = id;
+
+    public override string ToString()
+    {
+        return "ID[" + Id + "]";
+    }
+
+    public override int GetHashCode()
+    {
+        return Id.GetHashCode();
+    }
+
+    public override bool Equals([NotNullWhen(true)] object? obj)
+    {
+        if (obj is Identifier id)
+        {
+            return Id.Equals(id.Id);
+        }
+
+        return false;
+    }
 }
 public interface IIdentifiable
 {

@@ -74,7 +74,7 @@ public abstract class SkiaSharp3DScene : SkiaSharpScene
             var view = GetViewForInterface(iface);
             if (view == null) continue;
 
-            using var viewImage = CreateViewImage((SKRect)view, iface, snapshot);
+            using var viewImage = CreateViewImage((SKRect)view, iface, snapshot, SceneImageInfo);
 
             var encoded = viewImage.PeekPixels().GetPixels();
 

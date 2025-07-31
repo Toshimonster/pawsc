@@ -18,8 +18,9 @@ public class TestController(Identifier id) : PawsController(id)
         
         runtime.Scenes?.Add(
             //new PulserScene("TEST")
-            new SpinningCubeScene(new Identifier("TEST"))
+            //new SpinningCubeScene(new Identifier("TEST"))
             //new SpinningCubeAndPrismScene("TEST")
-        );
+            new StateScene(new Identifier("TEST"))
+            );
     }
 }

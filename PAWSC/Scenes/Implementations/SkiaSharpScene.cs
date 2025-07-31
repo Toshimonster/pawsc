@@ -5,7 +5,7 @@ using SkiaSharp;
 
 namespace PAWSC.Scenes.Implementations;
 
-public abstract class SkiaSharpScene : BaseScene
+public abstract class SkiaSharpScene : SkiaSharpRasterScene
 {
     protected SKImageInfo SceneImageInfo { get; }
     protected SKSurface Surface { get; }
@@ -37,7 +37,7 @@ public abstract class SkiaSharpScene : BaseScene
         {
             var viewInfo = GetViewForInterface(iface);
             if (viewInfo is null) continue;
-            using var viewImage = CreateViewImage((SKRect)viewInfo, iface, snapshot);
+            using var viewImage = CreateViewImage((SKRect)viewInfo, iface, snapshot, SceneImageInfo);
             
             var encoded = viewImage.PeekPixels().GetPixels();
 
@@ -47,7 +47,7 @@ public abstract class SkiaSharpScene : BaseScene
             var data = new byte[originalLen];
             System.Runtime.InteropServices.Marshal.Copy(encoded, data, 0, originalLen);
             
-            data = DropBytes(data, len, 4, interfaceBytes);
+            data = PawsInterfaceHelper.DropBytes(data, len, 4, interfaceBytes);
             
             iface.Accept(new ReadOnlySpan<byte>(data));
         }
@@ -66,55 +66,11 @@ public abstract class SkiaSharpScene : BaseScene
         // Default: full scene
         return new SKRect(0, 0, SceneImageInfo.Width, SceneImageInfo.Height);
     }
-    
-    /// <summary>
-    /// Creates a cropped or transformed image from the main snapshot based on the view rectangle.
-    /// </summary>
-    protected SKImage CreateViewImage(SKRect view, IPawsInterface iface, SKImage snapshot)
-    {
-        if (snapshot == null)
-            throw new InvalidOperationException("Main image snapshot is not ready.");
+}
 
-        // Clamp the view rect to valid bounds
-        var clampedView = SKRect.Intersect(view, new SKRect(0, 0, SceneImageInfo.Width, SceneImageInfo.Height));
-        var subset = new SKRectI(
-            (int)clampedView.Left,
-            (int)clampedView.Top,
-            (int)clampedView.Right,
-            (int)clampedView.Bottom);
-
-        var cropped = snapshot.Subset(subset) ?? snapshot;
-        return ScaleImage(cropped, iface.InterfaceInfo);
-    }
-
-    private static SKColorType GetColorType(PawsInterfaceInfo info)
-    {
-        return info.ByteRepresentation switch
-        {
-            PawsInterfaceInfo.PawsInterfaceByteRepresentation.Byte => SKColorType.Gray8,
-            PawsInterfaceInfo.PawsInterfaceByteRepresentation.Rgb => SKColorType.Rgb888x,
-            PawsInterfaceInfo.PawsInterfaceByteRepresentation.Rgba => SKColorType.Rgba8888,
-            _ => throw new NotImplementedException()
-        };
-    }
-
-    private byte[] DropBytes(byte[] from, int size, int bfrom, int bto)
-    {
-        if (bfrom < bto) throw new ArgumentException("bFrom must be >= to bTo");
-        if (bfrom == bto) return from;
-        byte[] toRet = new byte[size];
-        for (int i = 0, j = 0; i < size; i += bto, j += bfrom)
-        {
-            for (int k = 0; k < bto; k++)
-            {
-                toRet[i + k] = from[j + k];
-            }
-        }
-
-        return toRet;
-    }
-
-    private SKImage ScaleImage(SKImage image, PawsInterfaceInfo ifaceInterfaceInfo)
+public abstract class SkiaSharpRasterScene(Identifier identifier) : BaseScene(identifier)
+{
+    public static SKImage ScaleImage(SKImage image, PawsInterfaceInfo ifaceInterfaceInfo)
     {
         // If the cropped size matches target resolution, return directly
         if (image.Width == ifaceInterfaceInfo.Width && 
@@ -136,5 +92,36 @@ public abstract class SkiaSharpScene : BaseScene
 
         // Return the scaled image snapshot
         return modSurface.Snapshot();
+    }
+    
+    private static SKColorType GetColorType(PawsInterfaceInfo info)
+    {
+        return info.ByteRepresentation switch
+        {
+            PawsInterfaceInfo.PawsInterfaceByteRepresentation.Byte => SKColorType.Gray8,
+            PawsInterfaceInfo.PawsInterfaceByteRepresentation.Rgb => SKColorType.Rgb888x,
+            PawsInterfaceInfo.PawsInterfaceByteRepresentation.Rgba => SKColorType.Rgba8888,
+            _ => throw new NotImplementedException()
+        };
+    }
+
+    /// <summary>
+    /// Creates a cropped or transformed image from the main snapshot based on the view rectangle.
+    /// </summary>
+    public static SKImage CreateViewImage(SKRect view, IPawsInterface iface, SKImage snapshot, SKImageInfo info)
+    {
+        if (snapshot == null)
+            throw new InvalidOperationException("Main image snapshot is not ready.");
+
+        // Clamp the view rect to valid bounds
+        var clampedView = SKRect.Intersect(view, new SKRect(0, 0, info.Width, info.Height));
+        var subset = new SKRectI(
+            (int)clampedView.Left,
+            (int)clampedView.Top,
+            (int)clampedView.Right,
+            (int)clampedView.Bottom);
+
+        var cropped = snapshot.Subset(subset) ?? snapshot;
+        return ScaleImage(cropped, iface.InterfaceInfo);
     }
 }

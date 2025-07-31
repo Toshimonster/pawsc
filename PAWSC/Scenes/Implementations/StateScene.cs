@@ -14,15 +14,38 @@ public interface IPawsGif
     SKCodec Codec { get; init; }
 }
 
+public record PawsGif : IPawsGif
+{
+    public SKCodec Codec { get; init; }
+}
+
 public class BaseState(Identifier id, Dictionary<Identifier, IPawsGif> definition) : IPawsState
 {
     public Identifier Id { get; init; } = id;
     public Dictionary<Identifier, IPawsGif> Definition { get; init; } = definition;
 }
 
-public class StateScene(Identifier id) : BaseScene(id)
+public class StateScene : SkiaSharpRasterScene
 {
     protected Dictionary<Identifier, IPawsState> States = new();
+
+    public StateScene(Identifier id) : base(id)
+    {
+        var dict = new Dictionary<Identifier, IPawsGif>()
+        {
+            [new Identifier("LEFT_P45")] = new PawsGif()
+            {
+                Codec = SKCodec.Create("/home/toshi/Documents/Personal/Proto/ToshiProto/face_blink_shine.gif")
+            }
+        };
+        AddState(new BaseState(new Identifier("Test"), dict));
+        ActiveState = States.Keys.First();
+    }
+
+    public void AddState(IPawsState state)
+    {
+        States.Add(state.Id, state);
+    }
 
     public Identifier ActiveState
     {
@@ -49,27 +72,40 @@ public class StateScene(Identifier id) : BaseScene(id)
     {
         SKCodec codec = gif.Codec;
         SKCodecFrameInfo[] frames = codec.FrameInfo;
-        int frameIndex = GetFrameIndex(drawInfo.Time.Ticks, frames);
+        int frameIndex = GetFrameIndex(drawInfo.Time.Ticks / 10000, frames);
 
         var info = codec.Info;
         using var bitmap = new SKBitmap(info.Width, info.Height);
         var options = new SKCodecOptions(frameIndex);
 
         codec.GetPixels(bitmap.Info, bitmap.GetPixels(), options);
-        
-        // Encode the bitmap into PNG (or any supported format)
-        using var image = SKImage.FromBitmap(bitmap);
-        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+        var img = SKImage.FromBitmap(bitmap);
 
+        using SKImage viewImage = SkiaSharpScene.CreateViewImage(new SKRect(0, 0, bitmap.Width, bitmap.Height),
+            iface,
+            img,
+            img.Info
+        );
+        
+        var encoded = viewImage.PeekPixels().GetPixels();
+
+        var originalLen = viewImage.Width * viewImage.Height * 4;
+        var len =  iface.InterfaceInfo.GetByteSize();
+        var interfaceBytes = iface.InterfaceInfo.ByteRepresentation.GetBytesPerPixel();
+        var data = new byte[originalLen];
+        System.Runtime.InteropServices.Marshal.Copy(encoded, data, 0, originalLen);
+            
+        data = PawsInterfaceHelper.DropBytes(data, len, 4, interfaceBytes);
+        
         // Send the encoded image as a ReadOnlySpan<byte>
-        iface.Accept(data.AsSpan());
+        iface.Accept(data);
     }
     
     
     private int GetFrameIndex(long timeMs, SKCodecFrameInfo[] frames)
     {
         long totalDuration = frames.Sum(f => f.Duration);
-        long time = timeMs % totalDuration;
+        long time = (timeMs) % (totalDuration);
 
         long accumulated = 0;
         for (int i = 0; i < frames.Length; i++)
@@ -84,6 +120,6 @@ public class StateScene(Identifier id) : BaseScene(id)
 
     public override void Initialise(PawsRuntime runtime)
     {
-        throw new NotImplementedException();
+        //throw new NotImplementedException();
     }
 }

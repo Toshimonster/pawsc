@@ -39,4 +39,50 @@ public static class PawsInterfaceHelper
             destination[i] = new Pixel(r, g, b, a);
         }
     }
+    
+    /// <summary>
+    /// Reduces the byte size of pixel data by dropping excess bytes per pixel.
+    /// </summary>
+    /// <param name="from">The source byte array containing pixel data with <paramref name="bfrom"/> bytes per pixel.</param>
+    /// <param name="size">The size of the resulting byte array to produce (usually width * height * bto).</param>
+    /// <param name="bfrom">The number of bytes per pixel in the source data (must be greater than or equal to <paramref name="bto"/>).</param>
+    /// <param name="bto">The target number of bytes per pixel in the output data.</param>
+    /// <returns>
+    /// A new byte array containing the reduced pixel data with <paramref name="bto"/> bytes per pixel.
+    /// </returns>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="bfrom"/> is less than <paramref name="bto"/>.</exception>
+    public static byte[] DropBytes(byte[] from, int size, int bfrom, int bto)
+    {
+        if (from == null)
+            throw new ArgumentNullException(nameof(from));
+        if (bfrom < bto)
+            throw new ArgumentException("bfrom must be greater than or equal to bto", nameof(bfrom));
+        if (bto <= 0)
+            throw new ArgumentOutOfRangeException(nameof(bto), "bto must be positive");
+        if (size <= 0)
+            throw new ArgumentOutOfRangeException(nameof(size), "size must be positive");
+        if (from.Length < (size / bto) * bfrom)
+            throw new ArgumentException("Source array length is insufficient for the given parameters.");
+
+        if (bfrom == bto)
+            return from;
+
+        var result = new byte[size];
+        int pixelCount = size / bto;
+
+        for (int pixelIndex = 0; pixelIndex < pixelCount; pixelIndex++)
+        {
+            int srcOffset = pixelIndex * bfrom;
+            int dstOffset = pixelIndex * bto;
+            Buffer.BlockCopy(from, srcOffset, result, dstOffset, bto);
+        }
+
+        return result;
+    }
+
+    /// <inheritdoc cref="DropBytes(byte[],int,int,int)"/>
+    public static byte[] DropBytes(byte[] from, int bfrom, int bto)
+    {
+        return DropBytes(from, from.Length * (bfrom / bto), bfrom, bto);
+    }
 }
