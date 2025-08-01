@@ -20,6 +20,11 @@ public abstract class PawsItemManager<T> : IPawsInitialisable where T : IIdentif
     {
         return _items[id];
     }
+
+    public IEnumerable<T> ById(IEnumerable<Identifier> id)
+    {
+        return id.Select(ById).Where(o => o != null)!;
+    }
     
     public List<T> GetAll()
     {

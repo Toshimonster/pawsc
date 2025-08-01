@@ -37,17 +37,8 @@ public abstract class SkiaSharpScene : SkiaSharpRasterScene
         {
             var viewInfo = GetViewForInterface(iface);
             if (viewInfo is null) continue;
-            using var viewImage = CreateViewImage((SKRect)viewInfo, iface, snapshot, SceneImageInfo);
-            
-            var encoded = viewImage.PeekPixels().GetPixels();
 
-            var originalLen = viewImage.Width * viewImage.Height * 4;
-            var len =  iface.InterfaceInfo.GetByteSize();
-            var interfaceBytes = iface.InterfaceInfo.ByteRepresentation.GetBytesPerPixel();
-            var data = new byte[originalLen];
-            System.Runtime.InteropServices.Marshal.Copy(encoded, data, 0, originalLen);
-            
-            data = PawsInterfaceHelper.DropBytes(data, len, 4, interfaceBytes);
+            var data = GetBytesForIface(iface, snapshot, viewInfo ?? throw new AccessViolationException());
             
             iface.Accept(new ReadOnlySpan<byte>(data));
         }
@@ -123,5 +114,28 @@ public abstract class SkiaSharpRasterScene(Identifier identifier) : BaseScene(id
 
         var cropped = snapshot.Subset(subset) ?? snapshot;
         return ScaleImage(cropped, iface.InterfaceInfo);
+    }
+
+    protected byte[] GetBytesForIface(IPawsInterface iface, SKImage img)
+    {
+        return GetBytesForIface(iface, img, new SKRect(0, 0, img.Width, img.Height));
+    }
+    
+    protected byte[] GetBytesForIface(IPawsInterface iface, SKImage img, SKRect customView)
+    {
+        using SKImage viewImage = SkiaSharpScene.CreateViewImage(customView,
+            iface,
+            img,
+            img.Info
+        );
+
+        var pixels = viewImage.PeekPixels();
+
+        var len = iface.InterfaceInfo.GetByteSize();
+        var interfaceBytes = iface.InterfaceInfo.ByteRepresentation.GetBytesPerPixel();
+        var data = new byte[pixels.BytesSize];
+        System.Runtime.InteropServices.Marshal.Copy(pixels.GetPixels(), data, 0, data.Length);
+
+        return PawsInterfaceHelper.DropBytes(data, len, pixels.BytesPerPixel, interfaceBytes);
     }
 }

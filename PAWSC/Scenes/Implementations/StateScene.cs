@@ -6,23 +6,48 @@ namespace PAWSC.Scenes.Implementations;
 
 public interface IPawsState : IIdentifiable
 {
-    public Dictionary<Identifier, IPawsGif> Definition { get; init; }
+    public Dictionary<Identifier[], IPawsGif> Definition { get; }
 }
 
-public interface IPawsGif
+public interface IPawsGif : IIdentifiable
 {
-    SKCodec Codec { get; init; }
+    SKCodec Codec { get; }
 }
 
-public record PawsGif : IPawsGif
+public record PawsGif(Identifier Id) : IPawsGif
 {
-    public SKCodec Codec { get; init; }
+    public SKCodec Codec { get; private init; }
+    
+    public static PawsGif FromFile(string path, Identifier id)
+    {
+        var codec = SKCodec.Create(path);
+        if (codec is null) throw new FileNotFoundException(id + ": Could not create gif codec", path);
+        return new PawsGif(id)
+        {
+            Codec = codec
+        };
+    }
+
+    public static PawsGif FromFile(string path)
+    {
+        return FromFile(path, Identifier.Random());
+    }
 }
 
-public class BaseState(Identifier id, Dictionary<Identifier, IPawsGif> definition) : IPawsState
+public class BaseState(Identifier id) : IPawsState
 {
     public Identifier Id { get; init; } = id;
-    public Dictionary<Identifier, IPawsGif> Definition { get; init; } = definition;
+    public Dictionary<Identifier[], IPawsGif> Definition { get; } = new();
+
+    public void AddGif(Identifier[] interfaces, IPawsGif gif)
+    {
+        Definition[interfaces] = gif;
+    }
+    
+    public void AddGif(Identifier iface, IPawsGif gif)
+    {
+        AddGif([iface], gif);
+    }
 }
 
 public class StateScene : SkiaSharpRasterScene
@@ -31,14 +56,9 @@ public class StateScene : SkiaSharpRasterScene
 
     public StateScene(Identifier id) : base(id)
     {
-        var dict = new Dictionary<Identifier, IPawsGif>()
-        {
-            [new Identifier("LEFT_P45")] = new PawsGif()
-            {
-                Codec = SKCodec.Create("./start.gif")
-            }
-        };
-        AddState(new BaseState(new Identifier("Test"), dict));
+        var state = new BaseState(new Identifier("Test"));
+        state.AddGif(new Identifier("LEFT_P45"), PawsGif.FromFile("./myGifLocation.gif"));
+        AddState(state);
         ActiveState = States.Keys.First();
     }
 
@@ -60,15 +80,14 @@ public class StateScene : SkiaSharpRasterScene
         IPawsState? stateToDraw = ActiveStateObject;
         if (stateToDraw == null) return;
         
-        foreach (KeyValuePair<Identifier, IPawsGif> keyValuePair in stateToDraw.Definition)
+        foreach (KeyValuePair<Identifier[], IPawsGif> keyValuePair in stateToDraw.Definition)
         {
-            IPawsInterface? iface = mgr.ById(keyValuePair.Key);
-            if (iface == null) continue;
-            DrawToInterface(iface, keyValuePair.Value, drawInfo);
+            IEnumerable<IPawsInterface> ifaces = mgr.ById(keyValuePair.Key);
+            DrawToInterface(ifaces, keyValuePair.Value, drawInfo);
         }
     }
 
-    private void DrawToInterface(IPawsInterface iface, IPawsGif gif, DrawInfo drawInfo)
+    private void DrawToInterface(IEnumerable<IPawsInterface> ifaces, IPawsGif gif, DrawInfo drawInfo)
     {
         SKCodec codec = gif.Codec;
         SKCodecFrameInfo[] frames = codec.FrameInfo;
@@ -81,27 +100,15 @@ public class StateScene : SkiaSharpRasterScene
         codec.GetPixels(bitmap.Info, bitmap.GetPixels(), options);
         var img = SKImage.FromBitmap(bitmap);
 
-        using SKImage viewImage = SkiaSharpScene.CreateViewImage(new SKRect(0, 0, bitmap.Width, bitmap.Height),
-            iface,
-            img,
-            img.Info
-        );
-        
-        var encoded = viewImage.PeekPixels().GetPixels();
-
-        var originalLen = viewImage.Width * viewImage.Height * 4;
-        var len =  iface.InterfaceInfo.GetByteSize();
-        var interfaceBytes = iface.InterfaceInfo.ByteRepresentation.GetBytesPerPixel();
-        var data = new byte[originalLen];
-        System.Runtime.InteropServices.Marshal.Copy(encoded, data, 0, originalLen);
+        foreach (var iface in ifaces)
+        {
+            var data = GetBytesForIface(iface, img);
             
-        data = PawsInterfaceHelper.DropBytes(data, len, 4, interfaceBytes);
-        
-        // Send the encoded image as a ReadOnlySpan<byte>
-        iface.Accept(data);
+            // Send the encoded image as a ReadOnlySpan<byte>
+            iface.Accept(data);
+        }
     }
-    
-    
+
     private int GetFrameIndex(long timeMs, SKCodecFrameInfo[] frames)
     {
         long totalDuration = frames.Sum(f => f.Duration);
