@@ -57,7 +57,7 @@ public class StateScene : SkiaSharpRasterScene
     public StateScene(Identifier id) : base(id)
     {
         var state = new BaseState(new Identifier("Test"));
-        state.AddGif(new Identifier("LEFT_P45"), PawsGif.FromFile("./myGifLocation.gif"));
+        state.AddGif(new Identifier("LEFT_P45"), PawsGif.FromFile("./start.gif"));
         AddState(state);
         ActiveState = States.Keys.First();
     }
