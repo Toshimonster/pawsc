@@ -2,6 +2,7 @@
 using PAWSC;
 using PAWSC.Controllers;
 using PAWSC.Controllers.Implementations;
+using PAWSC.Controllers.Implementations.Gatt;
 using PAWSC.Interfaces;
 using PAWSC.Interfaces.Implementations;
 using PAWSC.Runtime;
@@ -12,8 +13,8 @@ class Program
     static void Main()
     {
         var x = new PawsRuntime();
-
-        if (File.Exists("/dev/fb0"))
+        
+        if (File.Exists("/dev/fb0") && !Environment.MachineName.Equals("ToshiArch"))
         {
             x.Interfaces.Add(new FrameBufferInterface("/dev/fb0", 320, 240)
             {

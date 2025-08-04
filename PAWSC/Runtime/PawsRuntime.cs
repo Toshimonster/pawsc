@@ -54,7 +54,9 @@ public class PawsRuntime : PawsEventHandler
     public PawsControllerManager Controllers { get; private set; } = new PawsControllerManager();
     public PawsSceneManager Scenes { get; private set; } = new PawsSceneManager();
 
-    private PawsDrawingThread _drawThread;
+    public IPawsScene? ActiveScene => _drawThread.GetScene();
+
+    private readonly PawsDrawingThread _drawThread;
 
     public PawsRuntime()
     {
@@ -77,6 +79,11 @@ public class PawsRuntime : PawsEventHandler
         private volatile IPawsScene? _scene;
         private readonly PawsInterfaceManager _interfaceManager = null!;
         private readonly int _frameDelayMs;
+
+        public IPawsScene? GetScene()
+        {
+            return _scene;
+        }
 
         public PawsDrawingThread(PawsInterfaceManager mgr, int targetFps = 120) : this()
         {

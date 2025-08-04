@@ -1,6 +1,4 @@
-﻿using DotnetBleServer.Gatt.Description;
-
-namespace PAWSC.Controllers.Gatt.Services
+﻿namespace PAWSC.Controllers.Implementations.Gatt
 {
     public record GattUuidDef
     {

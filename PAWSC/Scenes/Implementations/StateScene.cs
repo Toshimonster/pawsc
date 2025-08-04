@@ -54,27 +54,64 @@ public class StateScene : SkiaSharpRasterScene
 {
     protected Dictionary<Identifier, IPawsState> States = new();
 
+    public StateScene(Identifier id, Dictionary<Identifier, IPawsState> definitions): this(id)
+    {
+        States = definitions;
+    }
+    
     public StateScene(Identifier id) : base(id)
     {
-        var state = new BaseState(new Identifier("Test"));
-        state.AddGif(new Identifier("LEFT_P45"), PawsGif.FromFile("./start.gif"));
-        AddState(state);
-        ActiveState = States.Keys.First();
     }
 
+    public Dictionary<Identifier, IPawsState>.ValueCollection GetAllStates()
+    {
+        return States.Values;
+    }
+    
     public void AddState(IPawsState state)
     {
         States.Add(state.Id, state);
     }
 
-    public Identifier ActiveState
+    public Identifier? ActiveState
     {
-        get;
-        private set;
+        get
+        {
+            if (_activeState is null && States.Count > 0)
+            {
+                _activeState = States.Keys.FirstOrDefault();
+            }
+
+            return _activeState;
+        }
+        private set
+        {
+            if (value != null && States.ContainsKey((Identifier)value))
+            {
+                _activeState = value;
+            }
+            else
+            {
+                throw new ArgumentNullException();
+            }
+        }
     }
 
-    private IPawsState? ActiveStateObject => States[ActiveState];
-    
+    private Identifier? _activeState = null;
+
+    private IPawsState? ActiveStateObject
+    {
+        get
+        {
+            if (ActiveState != null)
+            {
+                return States.GetValueOrDefault((Identifier) ActiveState);
+            }
+
+            return null;
+        }
+    }
+
     public override void Draw(PawsInterfaceManager mgr, DrawInfo drawInfo)
     {
         IPawsState? stateToDraw = ActiveStateObject;
