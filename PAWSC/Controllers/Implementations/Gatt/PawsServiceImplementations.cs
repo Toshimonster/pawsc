@@ -14,20 +14,42 @@ public static class PawsServiceImplementations
 
     public static async Task RegisterGattApplication(PawsRuntime runtime)
     {
-        using var ctx = new ServerContext();
-        await RegisterGattApplication(ctx, runtime);
+        try
+        {
+            using var ctx = new ServerContext();
+            await ctx.ConnectAndSetDefaultAdapter();
+            await ctx.Adapter.SetPoweredAsync(true);
+
+            if (!await ctx.Adapter.GetPoweredAsync())
+            {
+                throw new Exception("Cant power adapter");
+            }
+
+            await RegisterGattApplication(ctx, runtime);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
     }
     public static async Task RegisterGattApplication(ServerContext ctx, PawsRuntime pawsRuntime)
     {
-        var advert = new LEAdvertisement1Properties()
+        Console.WriteLine("START");
+        var advert = new LEAdvertisement1Properties
         {
-            Type = "device",
-            ServiceUUIDs = ["12345678-1234-5678-1234-56789abcdef0"],
-            LocalName = "ToshiProto"
+            Type = "peripheral",
+            ServiceUUIDs = new [] {"12345678-1234-5678-1234-56789abcdef9"},
+            LocalName = "ToshiProto",
+            Appearance = (ushort)0x0080,
+            Discoverable = true,
+            IncludeTxPower = true
         };
 
-        await new AdvertisingManager(ctx).CreateAdvertisement(advert);
+        var mgr = new AdvertisingManager(ctx);
+        await mgr.CreateAdvertisement(advert);
             
+        
+        Console.WriteLine("AD");
         var gattServiceDescription = new GattServiceDescription
         {
             UUID = "12345678-1234-5678-1234-56789abcdef0",
@@ -48,9 +70,19 @@ public static class PawsServiceImplementations
             .AddService(gattServiceDescription)
             .WithCharacteristic(x, [y]);
 
+        Console.WriteLine("BUILD");
+        
         await new GattApplicationManager(ctx)
             .RegisterGattApplication(gab.BuildServiceDescriptions());
         Console.WriteLine("Done");
+        
+        AppDomain.CurrentDomain.ProcessExit += async (_, _) =>
+        {
+            Console.WriteLine("Cleaning up...");
+            await ctx.Adapter.SetPoweredAsync(false);
+        };
+
+        await Task.Delay(Timeout.Infinite);
     }
 
     public abstract class PawsCharacteristic : GattCharacteristicDescription
@@ -76,18 +108,25 @@ public static class PawsServiceImplementations
         }}
     }
 
-    public class PawsStatesCharacteristic(PawsRuntime runtime) : PawsStateCharacteristic(runtime, "0694bc1c-0064-4bd7-9840-41fa65d7355e")
+    public class PawsStatesCharacteristic : PawsStateCharacteristic
     {
+        public PawsStatesCharacteristic(PawsRuntime runtime) : base(runtime, "0694bc1c-0064-4bd7-9840-41fa65d7355e")
+        {
+            Flags = CharacteristicFlags.Read | CharacteristicFlags.Write;
+        }
+
         public override Task<byte[]> ReadValueAsync()
         {
+            Console.WriteLine("!!!");
             var states = ActiveStateScene?.GetAllStates().ToList() ?? [];
-            return Task.FromResult(Encoding.Unicode.GetBytes(string.Join(',', states)));
+            return Task.FromResult(Encoding.Unicode.GetBytes(string.Join(',', states.Select(x => x.Id))));
         }
     }
 
     public class PawsActiveStateCharacteristic(PawsRuntime runtime)
         : PawsStateCharacteristic(runtime, "81a6a500-b85e-4951-b6ac-b63c8f97f678")
     {
+        
         public override Task<byte[]> ReadValueAsync()
         {
             var activeState = ActiveStateScene?.ActiveState;
