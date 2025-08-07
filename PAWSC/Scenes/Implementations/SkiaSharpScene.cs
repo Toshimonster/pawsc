@@ -61,7 +61,7 @@ public abstract class SkiaSharpScene : SkiaSharpRasterScene
 
 public abstract class SkiaSharpRasterScene(Identifier identifier) : BaseScene(identifier)
 {
-    public static SKImage ScaleImage(SKImage image, PawsInterfaceInfo ifaceInterfaceInfo)
+    public static SKImage? ScaleImage(SKImage image, PawsInterfaceInfo ifaceInterfaceInfo)
     {
         // If the cropped size matches target resolution, return directly
         if (image.Width == ifaceInterfaceInfo.Width && 
@@ -74,6 +74,9 @@ public abstract class SkiaSharpRasterScene(Identifier identifier) : BaseScene(id
         var scaledInfo = new SKImageInfo(ifaceInterfaceInfo.Width, ifaceInterfaceInfo.Height, GetColorType(ifaceInterfaceInfo), image.AlphaType);
         using var modSurface = SKSurface.Create(scaledInfo);
 
+        if (modSurface is null)
+            return null;
+        
         var modCanvas = modSurface.Canvas;
         modCanvas.Clear(SKColors.Transparent);
 
@@ -99,7 +102,7 @@ public abstract class SkiaSharpRasterScene(Identifier identifier) : BaseScene(id
     /// <summary>
     /// Creates a cropped or transformed image from the main snapshot based on the view rectangle.
     /// </summary>
-    public static SKImage CreateViewImage(SKRect view, IPawsInterface iface, SKImage snapshot, SKImageInfo info)
+    public static SKImage? CreateViewImage(SKRect view, IPawsInterface iface, SKImage snapshot, SKImageInfo info)
     {
         if (snapshot == null)
             throw new InvalidOperationException("Main image snapshot is not ready.");
@@ -123,11 +126,13 @@ public abstract class SkiaSharpRasterScene(Identifier identifier) : BaseScene(id
     
     protected byte[] GetBytesForIface(IPawsInterface iface, SKImage img, SKRect customView)
     {
-        using SKImage viewImage = SkiaSharpScene.CreateViewImage(customView,
+        using SKImage? viewImage = SkiaSharpScene.CreateViewImage(customView,
             iface,
             img,
             img.Info
         );
+
+        if (viewImage is null) return [];
 
         var pixels = viewImage.PeekPixels();
 

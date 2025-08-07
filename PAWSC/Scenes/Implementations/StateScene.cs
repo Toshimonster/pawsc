@@ -140,12 +140,12 @@ public class StateScene : SkiaSharpRasterScene
         foreach (var iface in ifaces)
         {
             var data = GetBytesForIface(iface, img);
-            
+            if (data.Length == 0) continue;
             // Send the encoded image as a ReadOnlySpan<byte>
             iface.Accept(data);
         }
     }
-
+    
     private int GetFrameIndex(long timeMs, SKCodecFrameInfo[] frames)
     {
         long totalDuration = frames.Sum(f => f.Duration);
@@ -166,5 +166,17 @@ public class StateScene : SkiaSharpRasterScene
     public override void Initialise(PawsRuntime runtime)
     {
         //throw new NotImplementedException();
+    }
+
+    public void SetStateFromId(Identifier identifier)
+    {
+        try
+        {
+            ActiveState = identifier;
+        }
+        catch
+        {
+            //Ignore
+        }
     }
 }

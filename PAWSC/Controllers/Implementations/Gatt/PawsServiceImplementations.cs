@@ -57,18 +57,14 @@ public static class PawsServiceImplementations
         };
 
         var x = new PawsStatesCharacteristic(pawsRuntime);
-
-        var y = new GattDescriptorDescription
-        {
-            Value = new[] { (byte)'t' },
-            UUID = "12345678-1234-5678-1234-56789abcdef2",
-            Flags = new[] { "read", "write" }
-        };
         
         var gab = new GattApplicationBuilder();
-        gab
-            .AddService(gattServiceDescription)
-            .WithCharacteristic(x, [y]);
+        var service = gab
+            .AddService(gattServiceDescription);
+        
+        service.WithCharacteristic(x, []);
+        service.WithCharacteristic(new PawsActiveStateCharacteristic(pawsRuntime), []);
+        
 
         Console.WriteLine("BUILD");
         
@@ -87,16 +83,41 @@ public static class PawsServiceImplementations
 
     public abstract class PawsCharacteristic : GattCharacteristicDescription
     {
-        protected PawsCharacteristic(PawsRuntime runtime, string uuid)
+        protected PawsCharacteristic(PawsRuntime runtime, string uuid, CharacteristicFlags flags)
         {
             UUID = uuid;
             Runtime = runtime;
+            Flags = flags;
+        }
+
+        protected static byte[] EncodeFromString(string value)
+        {
+            try
+            {
+                return Encoding.Unicode.GetBytes(value ?? "");
+            }
+            catch
+            {
+                return [];
+            }
+        }
+
+        protected static string DecodeToString(byte[] value)
+        {
+            try
+            {
+                return Encoding.Unicode.GetString(value);
+            }
+            catch
+            {
+                return "";
+            }
         }
 
         protected PawsRuntime Runtime { get; }
     }
 
-    public abstract class PawsStateCharacteristic(PawsRuntime runtime, string uuid) : PawsCharacteristic(runtime, uuid)
+    public abstract class PawsStateCharacteristic(PawsRuntime runtime, string uuid, CharacteristicFlags flags) : PawsCharacteristic(runtime, uuid, flags)
     {
         protected StateScene? ActiveStateScene { get {
             if (Runtime.ActiveScene is StateScene stateScene)
@@ -108,34 +129,39 @@ public static class PawsServiceImplementations
         }}
     }
 
-    public class PawsStatesCharacteristic : PawsStateCharacteristic
+    public class PawsStatesCharacteristic(PawsRuntime runtime) : PawsStateCharacteristic(runtime,
+        "0694bc1c-0064-4bd7-9840-41fa65d7355e",
+        CharacteristicFlags.Read)
     {
-        public PawsStatesCharacteristic(PawsRuntime runtime) : base(runtime, "0694bc1c-0064-4bd7-9840-41fa65d7355e")
-        {
-            Flags = CharacteristicFlags.Read | CharacteristicFlags.Write;
-        }
-
         public override Task<byte[]> ReadValueAsync()
         {
-            Console.WriteLine("!!!");
             var states = ActiveStateScene?.GetAllStates().ToList() ?? [];
-            return Task.FromResult(Encoding.Unicode.GetBytes(string.Join(',', states.Select(x => x.Id))));
+            return Task.FromResult(
+                EncodeFromString(
+                    string.Join(',', states.Select(x => x.Id))
+                    )
+                );
         }
     }
 
     public class PawsActiveStateCharacteristic(PawsRuntime runtime)
-        : PawsStateCharacteristic(runtime, "81a6a500-b85e-4951-b6ac-b63c8f97f678")
+        : PawsStateCharacteristic(runtime, "81a6a500-b85e-4951-b6ac-b63c8f97f678", CharacteristicFlags.Notify)
     {
         
         public override Task<byte[]> ReadValueAsync()
         {
             var activeState = ActiveStateScene?.ActiveState;
-            
-            throw new NotImplementedException();
+            return Task.FromResult(
+                EncodeFromString(activeState?.ToString() ?? "")
+                );
         }
 
         public override Task WriteValueAsync(byte[] value)
         {
+            var stringId = DecodeToString(value);
+            var identifier = new Identifier(stringId);
+            Console.WriteLine(identifier);
+            ActiveStateScene?.SetStateFromId(identifier);
             return base.WriteValueAsync(value);
         }
     }
