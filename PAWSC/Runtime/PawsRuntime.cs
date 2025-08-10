@@ -48,6 +48,11 @@ public interface IPawsInitialisable
     public void Initialise(PawsRuntime runtime);
 }
 
+public interface IPawsAfterInitialisableHook
+{
+    public void AfterInitialise(PawsRuntime runtime);
+}
+
 public class PawsRuntime : PawsEventHandler
 {
     public PawsInterfaceManager Interfaces { get; private set; } = new PawsInterfaceManager();

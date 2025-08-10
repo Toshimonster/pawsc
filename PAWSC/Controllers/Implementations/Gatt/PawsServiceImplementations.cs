@@ -5,6 +5,7 @@ using DotnetBleServer.Gatt;
 using DotnetBleServer.Gatt.BlueZModel;
 using DotnetBleServer.Gatt.Description;
 using PAWSC.Runtime;
+using PAWSC.Scenes;
 using PAWSC.Scenes.Implementations;
 
 namespace PAWSC.Controllers.Implementations.Gatt;
@@ -128,8 +129,21 @@ public static class PawsServiceImplementations
             return null;
         }}
     }
+    
+    public abstract class PawsSceneCharacteristic<T>(PawsRuntime runtime, string uuid, CharacteristicFlags flags) : PawsCharacteristic(runtime, uuid, flags)
+    where T: IPawsScene
+    {
+        protected T? ActiveScene { get {
+            if (Runtime.ActiveScene is T scene)
+            {
+                return scene;
+            }
 
-    public class PawsStatesCharacteristic(PawsRuntime runtime) : PawsStateCharacteristic(runtime,
+            return default;
+        }}
+    }
+
+    public class PawsStatesCharacteristic(PawsRuntime runtime) : PawsServiceImplementations.PawsStateCharacteristic(runtime,
         "0694bc1c-0064-4bd7-9840-41fa65d7355e",
         CharacteristicFlags.Read)
     {
@@ -145,7 +159,7 @@ public static class PawsServiceImplementations
     }
 
     public class PawsActiveStateCharacteristic(PawsRuntime runtime)
-        : PawsStateCharacteristic(runtime, "81a6a500-b85e-4951-b6ac-b63c8f97f678", CharacteristicFlags.Notify)
+        : PawsServiceImplementations.PawsStateCharacteristic(runtime, "81a6a500-b85e-4951-b6ac-b63c8f97f678", CharacteristicFlags.Notify)
     {
         
         public override Task<byte[]> ReadValueAsync()
@@ -163,6 +177,148 @@ public static class PawsServiceImplementations
             Console.WriteLine(identifier);
             ActiveStateScene?.SetStateFromId(identifier);
             return base.WriteValueAsync(value);
+        }
+    }
+    
+    /*
+    public class StreamControlCharacteristic : PawsSceneCharacteristic<StreamScene
+    {
+        public StreamControlCharacteristic(PawsRuntime runtime) 
+            : base(runtime, "300751B6-1450-4D27-BE88-23B53A2FA3E9", CharacteristicFlags.Write)
+        {
+        }
+
+        public override Task WriteValueAsync(byte[] value)
+        {
+            var command = DecodeToString(value).ToLowerInvariant();
+
+            switch (command)
+            {
+                case "start":
+                    Runtime.StreamingManager?.StartStreaming();
+                    Console.WriteLine("Streaming started");
+                    break;
+
+                case "stop":
+                    Runtime.StreamingManager?.StopStreaming();
+                    Console.WriteLine("Streaming stopped");
+                    break;
+
+                default:
+                    Console.WriteLine($"Unknown command: {command}");
+                    break;
+            }
+            return Task.CompletedTask;
+        }
+    }
+    
+    public class StreamDataCharacteristic : PawsServiceImplementations.PawsCharacteristic
+    {
+        public StreamDataCharacteristic(PawsRuntime runtime)
+            : base(runtime, StreamGattUuids.DataCharacteristic, CharacteristicFlags.Notify)
+        {
+        }
+
+        // Method to notify connected clients with stream chunk data
+        public async Task NotifyStreamChunkAsync(byte[] chunk)
+        {
+            await RaiseNotification(chunk.AsMemory(0, chunk.Length));
+        }
+
+        public override Task<byte[]> ReadValueAsync()
+        {
+            byte[] toRet = [];
+            return Task.FromResult(toRet);
+        }
+    }*/
+
+    public class GattController(Identifier id) : PawsController(id), IPawsAfterInitialisableHook, IDisposable
+    {
+        public bool IsRegistered { get; private set; } = false;
+        private GattApplicationBuilder AppBuilder { get; set; } = new GattApplicationBuilder();
+        /**
+         * Only exists after AfterInit is successful (app is running)
+         */
+        private ServerContext? ServerContext { get; set; } = null;
+
+        public void RegisterService(GattServiceDescription serviceDescription, IEnumerable<GattCharacteristicDescription> characteristics)
+        {
+            if (IsRegistered)
+                throw new InvalidOperationException("Gatt Controller is already registered");
+            
+            var builder = AppBuilder.AddService(serviceDescription);
+            foreach (var characteristic in characteristics)
+            {
+                builder.WithCharacteristic(characteristic, []);
+            }
+        }
+
+        public override void Initialise(PawsRuntime runtime)
+        {
+            base.Initialise(runtime);
+        }
+
+        public void AfterInitialise(PawsRuntime runtime)
+        {
+            _ = StartGattServer();
+            IsRegistered = true;
+        }
+
+        private async Task StartGattServer()
+        {
+            ServerContext = new ServerContext();
+            await ServerContext.ConnectAndSetDefaultAdapter();
+            await ServerContext.Adapter.SetPoweredAsync(true);
+
+            if (!await ServerContext.Adapter.GetPoweredAsync())
+            {
+                throw new Exception("Could not power adapter.");
+            }
+            
+            await StartAdvertisement(ServerContext);
+            
+            await new GattApplicationManager(ServerContext)
+                .RegisterGattApplication(AppBuilder.BuildServiceDescriptions());
+
+            AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
+        }
+
+        private async Task StartAdvertisement(ServerContext serverContext)
+        {
+            var advert = new LEAdvertisement1Properties
+            {
+                Type = "peripheral",
+                ServiceUUIDs = new [] {"12345678-1234-5678-1234-56789abcdef9"},
+                LocalName = "ToshiProto",
+                Appearance = (ushort)0x0080,
+                Discoverable = true,
+                IncludeTxPower = true
+            };
+
+            var mgr = new AdvertisingManager(serverContext);
+            await mgr.CreateAdvertisement(advert);
+        }
+
+        private void OnProcessExit(object? sender, EventArgs e)
+        {
+            ServerContext.Adapter.SetPoweredAsync(false).Wait();
+        }
+
+        private void ReleaseUnmanagedResources()
+        {
+            ServerContext.Dispose();
+            AppDomain.CurrentDomain.ProcessExit -= OnProcessExit;
+        }
+
+        public void Dispose()
+        {
+            ReleaseUnmanagedResources();
+            GC.SuppressFinalize(this);
+        }
+
+        ~GattController()
+        {
+            ReleaseUnmanagedResources();
         }
     }
 }

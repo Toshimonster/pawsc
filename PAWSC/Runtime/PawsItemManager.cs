@@ -30,6 +30,11 @@ public abstract class PawsItemManager<T> : IPawsInitialisable where T : IIdentif
     {
         return _items.Values.ToList();
     }
+
+    public T2? FirstValueOfType<T2>() where T2 : class
+    {
+        return _items.Values.FirstOrDefault(e => e is T2) as T2;
+    }
     
     public void Initialise(PawsRuntime pawsRuntime)
     {
