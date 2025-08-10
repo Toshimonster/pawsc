@@ -240,6 +240,20 @@ public static class PawsServiceImplementations
          * Only exists after AfterInit is successful (app is running)
          */
         private ServerContext? ServerContext { get; set; } = null;
+        protected LEAdvertisement1Properties Advertisement { get; } = new LEAdvertisement1Properties
+        {
+            Type = "peripheral",
+            ServiceUUIDs = new [] {"12345678-1234-5678-1234-56789abcdef9"},
+            LocalName = "ToshiProto",
+            Appearance = (ushort)0x0080,
+            Discoverable = true,
+            IncludeTxPower = true
+        };
+
+        private void RegisterService(IGattControllableDefinition definition)
+        {
+            RegisterService(definition.ServiceDescription, definition.Characteristics);
+        }
 
         public void RegisterService(GattServiceDescription serviceDescription, IEnumerable<GattCharacteristicDescription> characteristics)
         {
@@ -253,17 +267,28 @@ public static class PawsServiceImplementations
             }
         }
 
-        public override void Initialise(PawsRuntime runtime)
+        public override Task Initialise(PawsRuntime runtime)
         {
             base.Initialise(runtime);
+            return Task.CompletedTask;
         }
 
-        public void AfterInitialise(PawsRuntime runtime)
+        public async Task AfterInitialise(PawsRuntime runtime)
         {
-            _ = StartGattServer();
+            await ScanForServices(runtime);
+            await StartGattServer();
             IsRegistered = true;
         }
 
+        private Task ScanForServices(PawsRuntime runtime)
+        {
+            foreach (var gattControllableDefinition in runtime.Scenes.ValuesofType<IGattControllableDefinition>())
+            {
+                RegisterService(gattControllableDefinition);
+            }
+            return Task.CompletedTask;
+        }
+        
         private async Task StartGattServer()
         {
             ServerContext = new ServerContext();
@@ -281,32 +306,24 @@ public static class PawsServiceImplementations
                 .RegisterGattApplication(AppBuilder.BuildServiceDescriptions());
 
             AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
+            
+            
         }
 
         private async Task StartAdvertisement(ServerContext serverContext)
         {
-            var advert = new LEAdvertisement1Properties
-            {
-                Type = "peripheral",
-                ServiceUUIDs = new [] {"12345678-1234-5678-1234-56789abcdef9"},
-                LocalName = "ToshiProto",
-                Appearance = (ushort)0x0080,
-                Discoverable = true,
-                IncludeTxPower = true
-            };
-
             var mgr = new AdvertisingManager(serverContext);
-            await mgr.CreateAdvertisement(advert);
+            await mgr.CreateAdvertisement(Advertisement);
         }
 
         private void OnProcessExit(object? sender, EventArgs e)
         {
-            ServerContext.Adapter.SetPoweredAsync(false).Wait();
+            ServerContext?.Adapter.SetPoweredAsync(false).Wait();
         }
 
         private void ReleaseUnmanagedResources()
         {
-            ServerContext.Dispose();
+            ServerContext?.Dispose();
             AppDomain.CurrentDomain.ProcessExit -= OnProcessExit;
         }
 

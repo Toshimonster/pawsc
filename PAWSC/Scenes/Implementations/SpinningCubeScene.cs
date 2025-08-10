@@ -14,10 +14,10 @@ public class SpinningCubeScene(Identifier name, int width = 255, int height = 25
 
     private SKImage?[] _faceImages = new SKImage?[6];
 
-    public override void Initialise(PawsRuntime runtime)
+    public override async Task Initialise(PawsRuntime runtime)
     {
-        base.Initialise(runtime);
-        UpdateFaceImages();
+        await base.Initialise(runtime);
+        await UpdateFaceImages();
     }
     
     protected override void RenderScene(DrawInfo drawInfo)

@@ -12,12 +12,12 @@ namespace PAWSC.Interfaces.Implementations
             Id = name;
         }
 
-        public void Initialise(PawsRuntime runtime)
+        public async Task Initialise(PawsRuntime runtime)
         {
             runtime.Interfaces.Remove(this);
             foreach (var interfaceProxyElement in ProxyElements)
             {
-                interfaceProxyElement.Initialise(runtime);
+                await interfaceProxyElement.Initialise(runtime);
                 runtime.Interfaces.Add(interfaceProxyElement);
             }
         }

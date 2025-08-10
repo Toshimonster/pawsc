@@ -21,11 +21,10 @@ namespace PAWSC.Interfaces.Implementations
         public required Identifier Id { get; set; }
 
         /// <inheritdoc />
-        public void Initialise(PawsRuntime runtime)
+        public Task Initialise(PawsRuntime runtime)
         {
-            //var x = GetFrameBufferInfo();
-            //Width = (int)x.xres;
-            //Height = (int)x.yres;
+            
+            return Task.CompletedTask;
         }
 
         /// <inheritdoc />

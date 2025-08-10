@@ -31,13 +31,25 @@ public abstract class PawsItemManager<T> : IPawsInitialisable where T : IIdentif
         return _items.Values.ToList();
     }
 
-    public T2? FirstValueOfType<T2>() where T2 : class
+    public IEnumerable<T2> ValuesofType<T2>() where T2 : class
     {
-        return _items.Values.FirstOrDefault(e => e is T2) as T2;
+        return _items.Values.Where(o => o is T2).Cast<T2>()!;
     }
     
-    public void Initialise(PawsRuntime pawsRuntime)
+    public Task Initialise(PawsRuntime pawsRuntime)
     {
         GetAll().ForEach(x => x.Initialise(pawsRuntime));
+        return Task.CompletedTask;
+    }
+
+    public void AfterInitialise(PawsRuntime pawsRuntime)
+    {
+        GetAll().ForEach(x =>
+        {
+            if (x is IPawsAfterInitialisableHook hooked)
+            {
+                hooked.AfterInitialise(pawsRuntime);
+            }
+        });
     }
 }

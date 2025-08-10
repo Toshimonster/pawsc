@@ -6,9 +6,9 @@ using PAWSC.Scenes.Implementations;
 
 namespace PAWSC.Controllers.Implementations;
 
-public class TestController(Identifier id) : PawsController(id)
+public class TestController(Identifier id) : PawsServiceImplementations.GattController(id)
 {
-    public override void Initialise(PawsRuntime runtime)
+    public override Task Initialise(PawsRuntime runtime)
     {
         base.Initialise(runtime);
 
@@ -35,8 +35,6 @@ public class TestController(Identifier id) : PawsController(id)
         stateScene.AddState(state);
         stateScene.AddState(state2);
         stateScene.SetStateFromId(state2.Id);
-
-        _ = PawsServiceImplementations.RegisterGattApplication(runtime);
         
         runtime.Scenes?.Add(
             //new PulserScene("TEST")
@@ -44,5 +42,6 @@ public class TestController(Identifier id) : PawsController(id)
             //new SpinningCubeAndPrismScene("TEST")
             stateScene
             );
+        return Task.CompletedTask;
     }
 }

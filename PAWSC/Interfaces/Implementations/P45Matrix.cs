@@ -4,7 +4,7 @@ namespace PAWSC.Interfaces.Implementations;
 
 public class P45Matrix : IPawsInterface
 {
-    public void Initialise(PawsRuntime runtime)
+    public Task Initialise(PawsRuntime runtime)
     {
         throw new NotImplementedException();
     }

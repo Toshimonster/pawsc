@@ -1,3 +1,5 @@
+using DotnetBleServer.Gatt.Description;
+using PAWSC.Controllers.Implementations.Gatt;
 using PAWSC.Interfaces;
 using PAWSC.Runtime;
 using SkiaSharp;
@@ -50,7 +52,7 @@ public class BaseState(Identifier id) : IPawsState
     }
 }
 
-public class StateScene : SkiaSharpRasterScene
+public class StateScene : SkiaSharpRasterScene, IGattControllableDefinition
 {
     protected Dictionary<Identifier, IPawsState> States = new();
 
@@ -124,6 +126,17 @@ public class StateScene : SkiaSharpRasterScene
         }
     }
 
+    public override Task Initialise(PawsRuntime runtime)
+    {
+        Characteristics =
+        [
+            new PawsServiceImplementations.PawsStatesCharacteristic(runtime),
+            new PawsServiceImplementations.PawsActiveStateCharacteristic(runtime)
+        ];
+        
+        return Task.CompletedTask;
+    }
+
     private void DrawToInterface(IEnumerable<IPawsInterface> ifaces, IPawsGif gif, DrawInfo drawInfo)
     {
         SKCodec codec = gif.Codec;
@@ -163,11 +176,6 @@ public class StateScene : SkiaSharpRasterScene
         return frames.Length - 1; // fallback to last frame
     }
 
-    public override void Initialise(PawsRuntime runtime)
-    {
-        //throw new NotImplementedException();
-    }
-
     public void SetStateFromId(Identifier identifier)
     {
         try
@@ -179,4 +187,12 @@ public class StateScene : SkiaSharpRasterScene
             //Ignore
         }
     }
+
+    public GattServiceDescription ServiceDescription { get; } = new GattServiceDescription
+    {
+        UUID = "12345678-1234-5678-1234-56789abcdef0",
+        Primary = true
+    };
+
+    public IEnumerable<GattCharacteristicDescription> Characteristics { get; private set; }
 }

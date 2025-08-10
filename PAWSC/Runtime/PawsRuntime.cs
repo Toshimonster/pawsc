@@ -45,12 +45,12 @@ public interface IIdentifiable
 
 public interface IPawsInitialisable
 {
-    public void Initialise(PawsRuntime runtime);
+    public Task Initialise(PawsRuntime runtime);
 }
 
 public interface IPawsAfterInitialisableHook
 {
-    public void AfterInitialise(PawsRuntime runtime);
+    public Task AfterInitialise(PawsRuntime runtime);
 }
 
 public class PawsRuntime : PawsEventHandler
@@ -75,6 +75,9 @@ public class PawsRuntime : PawsEventHandler
         Scenes.Initialise(this);
         _drawThread.SetScene(Scenes.GetAll().FirstOrDefault());
         _drawThread.Start();
+        Interfaces.AfterInitialise(this);
+        Controllers.AfterInitialise(this);
+        Scenes.AfterInitialise(this);
     }
 
     class PawsDrawingThread()
@@ -98,7 +101,7 @@ public class PawsRuntime : PawsEventHandler
 
         public bool IsRunning => _running;
 
-        public void SetScene(IPawsScene newScene)
+        public void SetScene(IPawsScene? newScene)
         {
             _scene = newScene;
         }

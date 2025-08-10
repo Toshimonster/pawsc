@@ -13,9 +13,10 @@ public class InterfaceProxyElement<T> : IPawsInterface where T : InterfaceProxyM
         ProxyManager = mgr;
     }
 
-    public void Initialise(PawsRuntime runtime)
+    public Task Initialise(PawsRuntime runtime)
     {
         // Optional implementation
+        return Task.CompletedTask;
     }
 
     public void Accept(ReadOnlySpan<byte> data)

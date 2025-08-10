@@ -17,8 +17,9 @@ public abstract class SkiaSharpScene : SkiaSharpRasterScene
         Surface = SKSurface.Create(SceneImageInfo);
     }
 
-    public override void Initialise(PawsRuntime runtime)
+    public override Task Initialise(PawsRuntime runtime)
     {
+        return Task.CompletedTask;
     }
 
     public override void Draw(PawsInterfaceManager mgr, DrawInfo drawInfo)

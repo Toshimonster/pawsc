@@ -21,7 +21,7 @@ public class PulserScene(Identifier name) : BaseScene(name)
         mgr.Distribute(buffer);
     }
 
-    public override void Initialise(PawsRuntime runtime)
+    public override Task Initialise(PawsRuntime runtime)
     {
         var leds = runtime.Interfaces?.GetByteSize() ?? 1000;
         _pulsers = new PulserLed[leds];
@@ -29,6 +29,7 @@ public class PulserScene(Identifier name) : BaseScene(name)
         {
             _pulsers[i] = new PulserLed(Frequency * Random.Shared.NextDouble());
         }
+        return Task.CompletedTask;
     }
 
     private class PulserLed(double frequency)

@@ -10,9 +10,10 @@ public interface IPawsController : IIdentifiable, IPawsInitialisable
 public abstract class PawsController(Identifier id) : IPawsController
 {
     protected PawsRuntime? Runtime { get; private set; }
-    public virtual void Initialise(PawsRuntime runtime)
+    public virtual Task Initialise(PawsRuntime runtime)
     {
         Runtime = runtime;
+        return Task.CompletedTask;
     }
 
     public Identifier Id { get; private set; } = id;

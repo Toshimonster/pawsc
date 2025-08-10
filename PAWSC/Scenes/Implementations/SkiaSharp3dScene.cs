@@ -216,9 +216,9 @@ public class SpinningCubeAndPrismScene : SkiaSharp3DScene
     {
     }
 
-    public override void Initialise(PawsRuntime runtime)
+    public override async Task Initialise(PawsRuntime runtime)
     {
-        base.Initialise(runtime);
+        await base.Initialise(runtime);
 
         // Cube vertices and faces (6 quads)
         var size = 0.1f;

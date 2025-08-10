@@ -14,9 +14,10 @@ public class TerminalInterface(int width, int height) : IPawsInterface
     };
     public required Identifier Id { get; init; }
 
-    public void Initialise(PawsRuntime runtime)
+    public Task Initialise(PawsRuntime runtime)
     {
         AnsiConsole.Clear();
+        return Task.CompletedTask;
     }
 
     public void Accept(ReadOnlySpan<byte> data)
