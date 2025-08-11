@@ -11,7 +11,7 @@ public class PawsInterfaceManager : PawsItemManager<IPawsInterface>
         return GetAll().Sum(x => x.InterfaceInfo.GetByteSize());
     }
 
-    public void Distribute(byte[] data)
+    public void Distribute(byte[]? data)
     {
         if (data.Length < GetByteSize()) throw new ArgumentException("Data is too small");
         var offset = 0;

@@ -6,7 +6,7 @@ using PAWSC.Scenes;
 
 namespace PAWSC.Runtime;
 
-public struct Identifier(string id) : IEquatable<Identifier>
+public readonly struct Identifier(string id) : IEquatable<Identifier>
 {
     private string Id { get; init; } = id;
 
@@ -24,7 +24,7 @@ public struct Identifier(string id) : IEquatable<Identifier>
 
     public override int GetHashCode()
     {
-        return Id.GetHashCode();
+        return Id?.GetHashCode() ?? 0;
     }
 
     public bool Equals(Identifier other)
@@ -35,6 +35,16 @@ public struct Identifier(string id) : IEquatable<Identifier>
     public override bool Equals(object? obj)
     {
         return obj is Identifier other && Equals(other);
+    }
+
+    public static bool operator ==(Identifier left, Identifier right)
+    {
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(Identifier left, Identifier right)
+    {
+        return !(left == right);
     }
 }
 

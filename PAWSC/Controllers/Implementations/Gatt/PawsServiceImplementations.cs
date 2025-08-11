@@ -103,11 +103,11 @@ public static class PawsServiceImplementations
             }
         }
 
-        protected static string DecodeToString(byte[] value)
+        protected static string DecodeToString(byte[]? value)
         {
             try
             {
-                return Encoding.Unicode.GetString(value);
+                return Encoding.Unicode.GetString(value ?? []);
             }
             catch
             {
@@ -170,7 +170,7 @@ public static class PawsServiceImplementations
                 );
         }
 
-        public override Task WriteValueAsync(byte[] value)
+        public override Task WriteValueAsync(byte[]? value)
         {
             var stringId = DecodeToString(value);
             var identifier = new Identifier(stringId);

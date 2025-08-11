@@ -3,6 +3,7 @@ using PAWSC.Controllers.Implementations.Gatt;
 using PAWSC.Interfaces.Implementations;
 using PAWSC.Runtime;
 using PAWSC.Scenes.Implementations;
+using PAWSC.Scenes.Implementations.Streaming;
 
 namespace PAWSC.Controllers.Implementations;
 
@@ -40,7 +41,8 @@ public class TestController(Identifier id) : PawsServiceImplementations.GattCont
             //new PulserScene("TEST")
             //new SpinningCubeScene(new Identifier("TEST"))
             //new SpinningCubeAndPrismScene("TEST")
-            stateScene
+            //stateScene
+            new StreamScene(Identifier.Random())
             );
         return Task.CompletedTask;
     }
