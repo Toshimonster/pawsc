@@ -92,6 +92,8 @@ public class PawsStreamInput(PawsRuntime runtime) : PawsServiceImplementations.P
     // Efficiently handle writes from BLE. Avoid allocations when possible by using ArrayPool
     public override Task WriteValueAsync(byte[]? value)
     {
+        Console.WriteLine("Values:");
+        Console.WriteLine(value);
         if (value == null || value.Length == 0) return Task.CompletedTask;
 
         // Very small parse. Expect: value[0] header (1=start), then maybe length, then payload.
@@ -105,9 +107,11 @@ public class PawsStreamInput(PawsRuntime runtime) : PawsServiceImplementations.P
                 // start-of-frame
                 case 0x01 when offset + 2 > value.Length:
                     // malformed - not enough for length; ignore
+                    Console.WriteLine("Malformed");
                     return Task.CompletedTask;
                 case 0x01:
                 {
+                    Console.WriteLine("Start");
                     var len = (value[offset++] << 8) | value[offset++];
 
                     // allocate buffer for frame
@@ -134,6 +138,7 @@ public class PawsStreamInput(PawsRuntime runtime) : PawsServiceImplementations.P
                 // continuation chunk
                 case 0x02:
                 {
+                    Console.WriteLine("Continuation");
                     lock (_lock)
                     {
                         if (_currentFrameBuffer == null) return Task.CompletedTask; // out of sync - drop
@@ -152,6 +157,7 @@ public class PawsStreamInput(PawsRuntime runtime) : PawsServiceImplementations.P
                     break;
                 }
                 default:
+                    Console.WriteLine("Ignoring");
                     // unknown header: ignore remainder
                     return Task.CompletedTask;
             }
