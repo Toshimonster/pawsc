@@ -245,11 +245,11 @@ namespace PAWSC
             using var paint = new SKPaint
             {
                 Color = SKColors.White,
-                TextSize = 16,
-                IsAntialias = true,
-                TextAlign = SKTextAlign.Center
+                IsAntialias = true
             };
-            canvas.DrawText(text, x, y, paint);
+            using var font = new SKFont(SKTypeface.Default, 12);
+            
+            canvas.DrawText(text, x, y, SKTextAlign.Center, font, paint);
         }
     }
 

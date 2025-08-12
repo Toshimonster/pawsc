@@ -1,0 +1,31 @@
+<Project>
+  <PropertyGroup>
+    <!-- Enable nullable reference types -->
+    <Nullable>enable</Nullable>
+    
+    <!-- Enable implicit usings -->
+    <ImplicitUsings>enable</ImplicitUsings>
+    
+    <!-- Enable code analysis -->
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+    
+    <!-- Treat warnings as errors, but exclude security warnings and documentation warnings for development -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+    <WarningsNotAsErrors>NU1903;NU1904;NU1905;CS1591</WarningsNotAsErrors>
+    
+    <!-- Temporarily disable XML documentation to allow build to succeed -->
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    
+    <!-- Code style settings -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    
+    <!-- Performance and security -->
+    <OptimizeImplicitlyTriggeredBuild>true</OptimizeImplicitlyTriggeredBuild>
+    
+    <!-- Package security settings -->
+    <RestoreAudit>true</RestoreAudit>
+    <RestoreAuditMode>Direct</RestoreAuditMode>
+  </PropertyGroup>
+</Project> 

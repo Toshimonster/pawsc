@@ -10,33 +10,70 @@ using PAWSC.Scenes.Implementations;
 
 class Program
 {
-    static void Main()
+    static async Task<int> Main()
     {
-        var x = new PawsRuntime();
-        
+        try
+        {
+            using var runtime = new PawsRuntime();
+            
+            // Configure interfaces based on environment
+            ConfigureInterfaces(runtime);
+            
+            // Add controllers
+            ConfigureControllers(runtime);
+            
+            // Start the runtime
+            await runtime.Start();
+            
+            // Keep the application running
+            Console.WriteLine("PAWSC runtime started. Press Ctrl+C to exit.");
+            await Task.Delay(Timeout.Infinite);
+            
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Fatal error: {ex}");
+            return -1;
+        }
+    }
+
+    private static void ConfigureInterfaces(PawsRuntime runtime)
+    {
         if (File.Exists("/dev/fb0") && !Environment.MachineName.Equals("ToshiArch"))
         {
-            x.Interfaces.Add(new FrameBufferInterface("/dev/fb0", 320, 240)
+            // Linux framebuffer interface
+            runtime.Interfaces.Add(new FrameBufferInterface("/dev/fb0", 320, 240)
             {
                 Id = new Identifier("LEFT_P45")
             });
         }
         else
         {
-            /*x.Interfaces.Add(new TerminalInterface(160, 50)
-            {
-                Id = "!"
-            });*/
-
-            x.Interfaces.Add(new ToshiProtogenProxy<TerminalInterface>(new Identifier("TEST"), 
+            // Terminal interface for development/testing
+            runtime.Interfaces.Add(new ToshiProtogenProxy<TerminalInterface>(
+                new Identifier("TEST"), 
                 new TerminalInterface(ToshiProtogenProxy<TerminalInterface>.Width, ToshiProtogenProxy<TerminalInterface>.Height)
                 {
                     Id = new Identifier("Term")
                 }));
         }
+    }
 
-        x.Controllers.Add(new TestController(new Identifier("!!")));
-        
-        x.Start();
+    private static void ConfigureControllers(PawsRuntime runtime)
+    {
+        try
+        {
+            // Add Bluetooth controller if available
+            var testController = new TestController(new Identifier("!!"));
+            runtime.Controllers.Add(testController);
+            Console.WriteLine("✅ Test controller added successfully");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"⚠️  Failed to add test controller: {ex.Message}");
+            Console.WriteLine("   The application will continue without Bluetooth functionality.");
+            Console.WriteLine("   See BLUETOOTH_TROUBLESHOOTING.md for solutions.");
+        }
     }
 }

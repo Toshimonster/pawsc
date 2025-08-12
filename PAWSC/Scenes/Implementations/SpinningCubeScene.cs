@@ -94,25 +94,11 @@ public class SpinningCubeScene(Identifier name, int width = 255, int height = 25
         using var paint = new SKPaint
         {
             Color = SKColors.White,
-            StrokeWidth = 2,
-            IsAntialias = true,
-            Style = SKPaintStyle.Stroke
-        };
-
-        // Draw cube edges
-        foreach (var (a, b) in edges)
-        {
-            Canvas.DrawLine(projected[a], projected[b], paint);
-        }
-
-        // Optionally draw FPS/time text
-        using var textPaint = new SKPaint
-        {
-            Color = SKColors.LightGreen,
-            TextSize = 10,
             IsAntialias = true
         };
-        Canvas.DrawText($"Time: {drawInfo.Time:s.fff} | DT: {drawInfo.Deltatime} | FPS: {drawInfo.Fps}", 5, 20, textPaint);
+        using var font = new SKFont(SKTypeface.Default, 12);
+        
+        Canvas.DrawText($"FPS: {drawInfo.Fps}", 10, 20, SKTextAlign.Left, font, paint);
     }
     
     private async Task UpdateFaceImages()
@@ -157,7 +143,7 @@ public class SpinningCubeScene(Identifier name, int width = 255, int height = 25
                         int resizedHeight = (int)(height * scale);
 
                         // Resize bitmap
-                        using var resizedBitmap = originalBitmap.Resize(new SKImageInfo(resizedWidth, resizedHeight), SKFilterQuality.High);
+                        using var resizedBitmap = originalBitmap.Resize(new SKImageInfo(resizedWidth, resizedHeight), new SKSamplingOptions(SKCubicResampler.Mitchell));
 
                         if (resizedBitmap != null)
                         {

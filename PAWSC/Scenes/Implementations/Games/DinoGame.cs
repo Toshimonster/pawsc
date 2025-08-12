@@ -5,11 +5,11 @@ namespace PAWSC.Scenes.Implementations.Games;
 
 public class DinoGame(Identifier id) : GameScene(id)
     {
+        #pragma warning disable CS0169 // Field is never used - will be used for controller input
         private GameControllerCharacteristic? _controller;
+        #pragma warning restore CS0169
 
         // Display / world
-        private readonly int DisplayWidth = 64;
-        private readonly int DisplayHeight = 32;
         private float groundY;
 
         // Dino (pixelated)

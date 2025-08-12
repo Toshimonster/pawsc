@@ -2,10 +2,13 @@ using PAWSC.Runtime;
 
 namespace PAWSC.Interfaces.Implementations
 {
-    public abstract class InterfaceProxyManager<T> : IPawsInterface where T : InterfaceProxyManager<T>
+    /// <summary>
+    /// Base class for managing proxy interfaces that delegate to underlying interfaces.
+    /// </summary>
+    public abstract class InterfaceProxyManager : IPawsInterface
     {
-        public Identifier Id { get; private set; }
-        public IList<InterfaceProxyElement<T>> ProxyElements { get; } = new List<InterfaceProxyElement<T>>();
+        public Identifier Id { get; }
+        public IList<InterfaceProxyElement> ProxyElements { get; } = new List<InterfaceProxyElement>();
 
         protected InterfaceProxyManager(Identifier name)
         {
@@ -14,6 +17,8 @@ namespace PAWSC.Interfaces.Implementations
 
         public async Task Initialise(PawsRuntime runtime)
         {
+            if (runtime == null) throw new ArgumentNullException(nameof(runtime));
+            
             runtime.Interfaces.Remove(this);
             foreach (var interfaceProxyElement in ProxyElements)
             {
@@ -24,48 +29,79 @@ namespace PAWSC.Interfaces.Implementations
 
         public void Accept(ReadOnlySpan<byte> data)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException("Direct Accept is not supported for proxy managers. Use AcceptProxy instead.");
         }
 
-        public abstract void AcceptProxy(ReadOnlySpan<byte> data, InterfaceProxyElement<T> test);
+        public abstract void AcceptProxy(ReadOnlySpan<byte> data, InterfaceProxyElement element);
 
         public virtual PawsInterfaceInfo InterfaceInfo { get; } = new PawsInterfaceInfo();
 
         public int ByteSize => ProxyElements.Sum(e => e.InterfaceInfo.GetByteSize());
     }
 
-    public class ToshiProtogenProxy<T> : InterfaceProxyManager<ToshiProtogenProxy<T>> where T: IPawsInterface
+    /// <summary>
+    /// Represents a proxy element that can be managed by a proxy manager.
+    /// </summary>
+    public abstract class InterfaceProxyElement : IPawsInterface
     {
-        public T Interface;
-        public byte[] Bytes;
-        public int SpacerSizeBytes;
-        public ToshiProtogenProxy(Identifier name, T rawInterface): base(name)
+        public Identifier Id { get; }
+        public InterfaceProxyManager ProxyManager { get; }
+
+        protected InterfaceProxyElement(Identifier identifier, InterfaceProxyManager mgr)
         {
-            Interface = rawInterface;
+            Id = identifier;
+            ProxyManager = mgr ?? throw new ArgumentNullException(nameof(mgr));
+        }
+
+        public virtual Task Initialise(PawsRuntime runtime)
+        {
+            return Task.CompletedTask;
+        }
+
+        public void Accept(ReadOnlySpan<byte> data)
+        {
+            ProxyManager.AcceptProxy(data, this);
+        }
+
+        public PawsInterfaceInfo InterfaceInfo { get; init; } = new PawsInterfaceInfo();
+    }
+
+    /// <summary>
+    /// Specialized proxy manager for ToshiProtogen interfaces.
+    /// </summary>
+    public class ToshiProtogenProxy<T> : InterfaceProxyManager where T : IPawsInterface
+    {
+        public T Interface { get; }
+        public byte[] Bytes { get; }
+        public int SpacerSizeBytes { get; }
+        
+        public ToshiProtogenProxy(Identifier name, T rawInterface) : base(name)
+        {
+            Interface = rawInterface ?? throw new ArgumentNullException(nameof(rawInterface));
             
             ProxyElements.Add(
-                new InterfaceProxyElement<ToshiProtogenProxy<T>>(new Identifier("LEFT_P45"), this)
+                new ToshiProtogenProxyElement(new Identifier("LEFT_P45"), this)
                 {
                     InterfaceInfo = new PawsInterfaceInfo()
                     {
-                        Width = ToshiProtogenProxy<T>.Width,
-                        Height = (ToshiProtogenProxy<T>.Height - 1) / 2,
+                        Width = Width,
+                        Height = (Height - 1) / 2,
                         ByteRepresentation = PawsInterfaceInfo.PawsInterfaceByteRepresentation.Rgb
                     }
                 }
             );
             ProxyElements.Add(
-                new InterfaceProxyElement<ToshiProtogenProxy<T>>(new Identifier("RIGHT_P45"), this)
+                new ToshiProtogenProxyElement(new Identifier("RIGHT_P45"), this)
                 {
                     InterfaceInfo = new PawsInterfaceInfo()
                     {
-                        Width = ToshiProtogenProxy<T>.Width,
-                        Height = (ToshiProtogenProxy<T>.Height - 1) / 2,
+                        Width = Width,
+                        Height = (Height - 1) / 2,
                         ByteRepresentation = PawsInterfaceInfo.PawsInterfaceByteRepresentation.Rgb
                     }
                 }
             );
-            SpacerSizeBytes = ToshiProtogenProxy<T>.Width * 3;
+            SpacerSizeBytes = Width * 3;
             
             Bytes = new byte[rawInterface.InterfaceInfo.GetByteSize()];
 
@@ -75,6 +111,7 @@ namespace PAWSC.Interfaces.Implementations
         private void PopulateSpacers(byte color = 255)
         {
             if (ProxyElements.Count <= 0) return;
+            
             int start = ProxyElements[0].InterfaceInfo.GetByteSize();
             for (int i = 1; i < ProxyElements.Count; i++)
             {
@@ -84,9 +121,11 @@ namespace PAWSC.Interfaces.Implementations
             }
         }
 
-        public override void AcceptProxy(ReadOnlySpan<byte> data, InterfaceProxyElement<ToshiProtogenProxy<T>> test)
+        public override void AcceptProxy(ReadOnlySpan<byte> data, InterfaceProxyElement element)
         {
-            int idx = ProxyElements.IndexOf(test);
+            if (element == null) throw new ArgumentNullException(nameof(element));
+            
+            int idx = ProxyElements.IndexOf(element);
             if (idx < 0) return;
 
             int start = 0;
@@ -96,14 +135,25 @@ namespace PAWSC.Interfaces.Implementations
                 start += SpacerSizeBytes;
             }
 
-            Span<byte> toEdit = new Span<byte>(Bytes, start, test.InterfaceInfo.GetByteSize());
+            Span<byte> toEdit = new Span<byte>(Bytes, start, element.InterfaceInfo.GetByteSize());
             
             data.CopyTo(toEdit);
             Interface.Accept(Bytes);
         }
 
         public override PawsInterfaceInfo InterfaceInfo => Interface.InterfaceInfo;
-        public static int Width =>  64 * 2;
+        public static int Width => 64 * 2;
         public static int Height => 42 + 42 + 1;
+    }
+
+    /// <summary>
+    /// Specialized proxy element for ToshiProtogen interfaces.
+    /// </summary>
+    public class ToshiProtogenProxyElement : InterfaceProxyElement
+    {
+        public ToshiProtogenProxyElement(Identifier identifier, InterfaceProxyManager mgr) 
+            : base(identifier, mgr)
+        {
+        }
     }
 }

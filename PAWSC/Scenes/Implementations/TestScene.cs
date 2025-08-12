@@ -12,10 +12,10 @@ public class TestScene(Identifier name, int width = 255, int height = 255, SKCol
         using var paint = new SKPaint
         {
             Color = SKColors.White,
-            TextSize = 12,
-            IsAntialias = true,
+            IsAntialias = true
         };
-
-        Canvas.DrawText($"Time: {drawInfo.Time.ToString("s.fff")} | DT: {drawInfo.Deltatime} | FPS: {drawInfo.Fps}", 0, 60, paint);
+        using var font = new SKFont(SKTypeface.Default, 12);
+        
+        Canvas.DrawText("Test Scene", 10, 20, SKTextAlign.Left, font, paint);
     }
 }

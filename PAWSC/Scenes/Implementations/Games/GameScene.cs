@@ -48,7 +48,7 @@ public class GameControllerCharacteristic(PawsRuntime runtime) : PawsServiceImpl
 
     public override Task WriteValueAsync(byte[] value)
     {
-        if (value.Length != 0)
+        if (value.Length != 1)
             return Task.CompletedTask;
 
         ControllerValues control = (ControllerValues) value[0];

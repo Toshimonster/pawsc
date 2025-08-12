@@ -13,7 +13,9 @@ public class PawsInterfaceManager : PawsItemManager<IPawsInterface>
 
     public void Distribute(byte[]? data)
     {
+        if (data == null) throw new ArgumentNullException(nameof(data));
         if (data.Length < GetByteSize()) throw new ArgumentException("Data is too small");
+        
         var offset = 0;
         
         foreach (var inter in GetAll())

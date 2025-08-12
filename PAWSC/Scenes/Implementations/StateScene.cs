@@ -18,7 +18,7 @@ public interface IPawsGif : IIdentifiable
 
 public record PawsGif(Identifier Id) : IPawsGif
 {
-    public SKCodec Codec { get; private init; }
+    public SKCodec Codec { get; private init; } = null!;
     
     public static PawsGif FromFile(string path, Identifier id)
     {
@@ -194,5 +194,5 @@ public class StateScene : SkiaSharpRasterScene, IGattControllableDefinition
         Primary = true
     };
 
-    public IEnumerable<GattCharacteristicDescription> Characteristics { get; private set; }
+    public IEnumerable<GattCharacteristicDescription> Characteristics { get; private set; } = new List<GattCharacteristicDescription>();
 }

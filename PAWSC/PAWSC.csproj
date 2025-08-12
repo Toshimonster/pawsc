@@ -13,6 +13,14 @@
       <PackageReference Include="SkiaSharp" Version="3.119.0" />
       <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.119.0" />
       <PackageReference Include="Spectre.Console" Version="0.50.1-preview.0.22" />
+
+      <!-- Explicit secure versions for transitive dependencies -->
+      <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    </ItemGroup>
+
+    <!-- Package version constraints to prevent vulnerable versions -->
+    <ItemGroup>
+      <PackageVersion Include="System.Text.Json" Version="[8.0.5,)" />
     </ItemGroup>
 
 </Project>

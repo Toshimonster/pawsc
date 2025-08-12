@@ -1,0 +1,389 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>PAWSC</name>
+    </assembly>
+    <members>
+        <member name="P:PAWSC.Controllers.Implementations.Gatt.PawsServiceImplementations.GattController.ServerContext">
+            Only exists after AfterInit is successful (app is running)
+        </member>
+        <member name="T:PAWSC.Interfaces.Implementations.FrameBufferInterface">
+            <summary>
+            Interface to interact with a framebuffer device on a Linux system.
+            Provides functionality to write pixel data and retrieve framebuffer details via ioctl.
+            </summary>
+        </member>
+        <member name="M:PAWSC.Interfaces.Implementations.FrameBufferInterface.#ctor(System.String,System.Int32,System.Int32)">
+            <summary>
+            Interface to interact with a framebuffer device on a Linux system.
+            Provides functionality to write pixel data and retrieve framebuffer details via ioctl.
+            </summary>
+        </member>
+        <member name="P:PAWSC.Interfaces.Implementations.FrameBufferInterface.Id">
+            <inheritdoc />
+        </member>
+        <member name="M:PAWSC.Interfaces.Implementations.FrameBufferInterface.Initialise(PAWSC.Runtime.PawsRuntime)">
+            <inheritdoc />
+        </member>
+        <member name="M:PAWSC.Interfaces.Implementations.FrameBufferInterface.Accept(System.ReadOnlySpan{System.Byte})">
+            <inheritdoc />
+        </member>
+        <member name="M:PAWSC.Interfaces.Implementations.FrameBufferInterface.GetFrameBufferInfo">
+            <summary>
+            Currently broken. Segmentation fault.
+            Retrieves detailed information about the framebuffer device using ioctl.
+            </summary>
+            <returns>A <see cref="T:PAWSC.Interfaces.Implementations.FrameBufferInterface.FbVarScreenInfo"/> structure containing framebuffer info.</returns>
+            <exception cref="T:System.IO.FileNotFoundException">Thrown if the framebuffer device path does not exist.</exception>
+            <exception cref="T:System.IO.IOException">Thrown if the ioctl call fails.</exception>
+        </member>
+        <member name="T:PAWSC.Interfaces.Implementations.FrameBufferInterface.FbVarScreenInfo">
+            <summary>
+            Native structure corresponding to fb_var_screeninfo in Linux framebuffer API.
+            Only a subset of fields is included for demonstration.
+            </summary>
+        </member>
+        <member name="T:PAWSC.Interfaces.Implementations.InterfaceProxyManager">
+            <summary>
+            Base class for managing proxy interfaces that delegate to underlying interfaces.
+            </summary>
+        </member>
+        <member name="T:PAWSC.Interfaces.Implementations.InterfaceProxyElement">
+            <summary>
+            Represents a proxy element that can be managed by a proxy manager.
+            </summary>
+        </member>
+        <member name="T:PAWSC.Interfaces.Implementations.ToshiProtogenProxy`1">
+            <summary>
+            Specialized proxy manager for ToshiProtogen interfaces.
+            </summary>
+        </member>
+        <member name="T:PAWSC.Interfaces.Implementations.ToshiProtogenProxyElement">
+            <summary>
+            Specialized proxy element for ToshiProtogen interfaces.
+            </summary>
+        </member>
+        <member name="T:PAWSC.Interfaces.PawsInterfaceInfo">
+            <summary>
+            Represents information about a PAWS interface including dimensions and byte representation.
+            </summary>
+        </member>
+        <member name="P:PAWSC.Interfaces.PawsInterfaceInfo.Width">
+            <summary>
+            Gets the width of the interface in pixels.
+            </summary>
+        </member>
+        <member name="P:PAWSC.Interfaces.PawsInterfaceInfo.Height">
+            <summary>
+            Gets the height of the interface in pixels.
+            </summary>
+        </member>
+        <member name="P:PAWSC.Interfaces.PawsInterfaceInfo.ByteRepresentation">
+            <summary>
+            Gets the byte representation format for the interface.
+            </summary>
+        </member>
+        <member name="T:PAWSC.Interfaces.PawsInterfaceInfo.PawsInterfaceByteRepresentation">
+            <summary>
+            Defines the byte representation formats for pixel data.
+            </summary>
+        </member>
+        <member name="F:PAWSC.Interfaces.PawsInterfaceInfo.PawsInterfaceByteRepresentation.Byte">
+            <summary>
+            Single byte per pixel (grayscale).
+            </summary>
+        </member>
+        <member name="F:PAWSC.Interfaces.PawsInterfaceInfo.PawsInterfaceByteRepresentation.Rgb">
+            <summary>
+            Three bytes per pixel (RGB).
+            </summary>
+        </member>
+        <member name="F:PAWSC.Interfaces.PawsInterfaceInfo.PawsInterfaceByteRepresentation.Rgba">
+            <summary>
+            Four bytes per pixel (RGBA).
+            </summary>
+        </member>
+        <member name="M:PAWSC.Interfaces.PawsInterfaceInfo.GetByteSize">
+            <summary>
+            Calculates the total byte size needed for the interface.
+            </summary>
+            <returns>The total number of bytes required.</returns>
+        </member>
+        <member name="T:PAWSC.Interfaces.IPawsInterface">
+            <summary>
+            Represents a PAWS interface that can accept data and provide display information.
+            </summary>
+        </member>
+        <member name="M:PAWSC.Interfaces.IPawsInterface.Accept(System.ReadOnlySpan{System.Byte})">
+            <summary>
+            Accepts data to be processed by the interface.
+            </summary>
+            <param name="data">The data to be processed.</param>
+        </member>
+        <member name="P:PAWSC.Interfaces.IPawsInterface.InterfaceInfo">
+            <summary>
+            Gets information about the interface.
+            </summary>
+        </member>
+        <member name="T:PAWSC.Interfaces.Pixel">
+            <summary>
+            Represents a pixel with RGBA color components.
+            </summary>
+        </member>
+        <member name="P:PAWSC.Interfaces.Pixel.R">
+            <summary>
+            Gets the red component (0-255).
+            </summary>
+        </member>
+        <member name="P:PAWSC.Interfaces.Pixel.G">
+            <summary>
+            Gets the green component (0-255).
+            </summary>
+        </member>
+        <member name="P:PAWSC.Interfaces.Pixel.B">
+            <summary>
+            Gets the blue component (0-255).
+            </summary>
+        </member>
+        <member name="P:PAWSC.Interfaces.Pixel.A">
+            <summary>
+            Gets the alpha component (0-255).
+            </summary>
+        </member>
+        <member name="M:PAWSC.Interfaces.Pixel.#ctor(System.Byte,System.Byte,System.Byte,System.Byte)">
+            <summary>
+            Initializes a new instance of the Pixel struct.
+            </summary>
+            <param name="r">Red component.</param>
+            <param name="g">Green component.</param>
+            <param name="b">Blue component.</param>
+            <param name="a">Alpha component.</param>
+        </member>
+        <member name="M:PAWSC.Interfaces.Pixel.ApplyToRgb">
+            <summary>
+            Applies the alpha channel to the RGB components.
+            </summary>
+            <returns>A new pixel with alpha-applied RGB values.</returns>
+        </member>
+        <member name="M:PAWSC.Interfaces.PawsInterfaceHelper.DropBytes(System.Byte[],System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Reduces the byte size of pixel data by dropping excess bytes per pixel.
+            </summary>
+            <param name="from">The source byte array containing pixel data with <paramref name="bfrom"/> bytes per pixel.</param>
+            <param name="size">The size of the resulting byte array to produce (usually width * height * bto).</param>
+            <param name="bfrom">The number of bytes per pixel in the source data (must be greater than or equal to <paramref name="bto"/>).</param>
+            <param name="bto">The target number of bytes per pixel in the output data.</param>
+            <returns>
+            A new byte array containing the reduced pixel data with <paramref name="bto"/> bytes per pixel.
+            </returns>
+            <exception cref="T:System.ArgumentException">Thrown if <paramref name="bfrom"/> is less than <paramref name="bto"/>.</exception>
+        </member>
+        <member name="M:PAWSC.Interfaces.PawsInterfaceHelper.DropBytes(System.Byte[],System.Int32,System.Int32)">
+            <inheritdoc cref="M:PAWSC.Interfaces.PawsInterfaceHelper.DropBytes(System.Byte[],System.Int32,System.Int32,System.Int32)"/>
+        </member>
+        <member name="M:PAWSC.Runtime.PawsEventHandler.Subscribe(PAWSC.Runtime.PawsCommandType,System.Action{PAWSC.Runtime.IPawsCommand})">
+            <summary>
+            Subscribe a handler (lambda or method) to a specific command type.
+            </summary>
+        </member>
+        <member name="M:PAWSC.Runtime.PawsEventHandler.Unsubscribe(PAWSC.Runtime.PawsCommandType,System.Action{PAWSC.Runtime.IPawsCommand})">
+            <summary>
+            Unsubscribe a previously registered handler.
+            </summary>
+        </member>
+        <member name="M:PAWSC.Runtime.PawsEventHandler.Broadcast(PAWSC.Runtime.IPawsCommand)">
+            <summary>
+            Broadcasts the command to all subscribed handlers.
+            </summary>
+        </member>
+        <member name="T:PAWSC.Runtime.PawsItemManager`1">
+            <summary>
+            Generic manager for PAWS items that provides common functionality for collections of identifiable and initializable components.
+            </summary>
+            <typeparam name="T">The type of items to manage, must implement IIdentifiable and IPawsInitialisable.</typeparam>
+        </member>
+        <member name="M:PAWSC.Runtime.PawsItemManager`1.Add(`0)">
+            <summary>
+            Adds an item to the manager.
+            </summary>
+            <param name="item">The item to add.</param>
+            <returns>True if the item was added successfully; false if an item with the same ID already exists.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when item is null.</exception>
+        </member>
+        <member name="M:PAWSC.Runtime.PawsItemManager`1.Remove(`0)">
+            <summary>
+            Removes an item from the manager.
+            </summary>
+            <param name="item">The item to remove.</param>
+            <returns>True if the item was removed successfully; false if the item was not found.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when item is null.</exception>
+        </member>
+        <member name="M:PAWSC.Runtime.PawsItemManager`1.ById(PAWSC.Runtime.Identifier)">
+            <summary>
+            Retrieves an item by its identifier.
+            </summary>
+            <param name="id">The identifier of the item to retrieve.</param>
+            <returns>The item if found; null otherwise.</returns>
+        </member>
+        <member name="M:PAWSC.Runtime.PawsItemManager`1.ById(System.Collections.Generic.IEnumerable{PAWSC.Runtime.Identifier})">
+            <summary>
+            Retrieves multiple items by their identifiers.
+            </summary>
+            <param name="ids">The identifiers of the items to retrieve.</param>
+            <returns>An enumerable of found items.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when ids is null.</exception>
+        </member>
+        <member name="M:PAWSC.Runtime.PawsItemManager`1.GetAll">
+            <summary>
+            Gets all items in the manager.
+            </summary>
+            <returns>A read-only list of all items.</returns>
+        </member>
+        <member name="M:PAWSC.Runtime.PawsItemManager`1.ValuesOfType``1">
+            <summary>
+            Gets all items of a specific type.
+            </summary>
+            <typeparam name="T2">The type to filter by.</typeparam>
+            <returns>An enumerable of items of the specified type.</returns>
+        </member>
+        <member name="M:PAWSC.Runtime.PawsItemManager`1.Initialise(PAWSC.Runtime.PawsRuntime)">
+            <summary>
+            Initializes all items in the manager.
+            </summary>
+            <param name="pawsRuntime">The PAWS runtime.</param>
+            <returns>A task representing the initialization operation.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when pawsRuntime is null.</exception>
+        </member>
+        <member name="M:PAWSC.Runtime.PawsItemManager`1.AfterInitialise(PAWSC.Runtime.PawsRuntime)">
+            <summary>
+            Performs after-initialization operations on all items that support it.
+            </summary>
+            <param name="pawsRuntime">The PAWS runtime.</param>
+            <returns>A task representing the operation.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when pawsRuntime is null.</exception>
+        </member>
+        <member name="T:PAWSC.Runtime.Identifier">
+            <summary>
+            Represents a unique identifier for PAWS components.
+            </summary>
+        </member>
+        <member name="M:PAWSC.Runtime.Identifier.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the Identifier struct.
+            </summary>
+            <param name="id">The string identifier.</param>
+            <exception cref="T:System.ArgumentNullException">Thrown when id is null.</exception>
+        </member>
+        <member name="M:PAWSC.Runtime.Identifier.Random">
+            <summary>
+            Generates a random identifier with 5 characters.
+            </summary>
+            <returns>A new random identifier.</returns>
+        </member>
+        <member name="M:PAWSC.Runtime.Identifier.ToString">
+            <summary>
+            Returns a string representation of the identifier.
+            </summary>
+            <returns>A formatted string representation.</returns>
+        </member>
+        <member name="M:PAWSC.Runtime.Identifier.GetHashCode">
+            <summary>
+            Returns the hash code for this identifier.
+            </summary>
+            <returns>The hash code.</returns>
+        </member>
+        <member name="M:PAWSC.Runtime.Identifier.Equals(PAWSC.Runtime.Identifier)">
+            <summary>
+            Determines whether this identifier equals another.
+            </summary>
+            <param name="other">The other identifier to compare.</param>
+            <returns>True if the identifiers are equal; otherwise, false.</returns>
+        </member>
+        <member name="M:PAWSC.Runtime.Identifier.Equals(System.Object)">
+            <summary>
+            Determines whether this identifier equals another object.
+            </summary>
+            <param name="obj">The object to compare.</param>
+            <returns>True if the objects are equal; otherwise, false.</returns>
+        </member>
+        <member name="M:PAWSC.Runtime.Identifier.op_Equality(PAWSC.Runtime.Identifier,PAWSC.Runtime.Identifier)">
+            <summary>
+            Equality operator for identifiers.
+            </summary>
+            <param name="left">Left identifier.</param>
+            <param name="right">Right identifier.</param>
+            <returns>True if equal; otherwise, false.</returns>
+        </member>
+        <member name="M:PAWSC.Runtime.Identifier.op_Inequality(PAWSC.Runtime.Identifier,PAWSC.Runtime.Identifier)">
+            <summary>
+            Inequality operator for identifiers.
+            </summary>
+            <param name="left">Left identifier.</param>
+            <param name="right">Right identifier.</param>
+            <returns>True if not equal; otherwise, false.</returns>
+        </member>
+        <member name="T:PAWSC.Runtime.IIdentifiable">
+            <summary>
+            Interface for components that have an identifier.
+            </summary>
+        </member>
+        <member name="P:PAWSC.Runtime.IIdentifiable.Id">
+            <summary>
+            Gets the identifier of the component.
+            </summary>
+        </member>
+        <member name="T:PAWSC.Runtime.IPawsInitialisable">
+            <summary>
+            Interface for components that can be initialized.
+            </summary>
+        </member>
+        <member name="M:PAWSC.Runtime.IPawsInitialisable.Initialise(PAWSC.Runtime.PawsRuntime)">
+            <summary>
+            Initializes the component with the runtime.
+            </summary>
+            <param name="runtime">The PAWS runtime.</param>
+            <returns>A task representing the initialization operation.</returns>
+        </member>
+        <member name="T:PAWSC.Runtime.IPawsAfterInitialisableHook">
+            <summary>
+            Interface for components that need to perform operations after initialization.
+            </summary>
+        </member>
+        <member name="M:PAWSC.Runtime.IPawsAfterInitialisableHook.AfterInitialise(PAWSC.Runtime.PawsRuntime)">
+            <summary>
+            Performs operations after initialization.
+            </summary>
+            <param name="runtime">The PAWS runtime.</param>
+            <returns>A task representing the operation.</returns>
+        </member>
+        <member name="T:PAWSC.Runtime.PawsRuntime">
+            <summary>
+            The main runtime class that manages the PAWS system.
+            </summary>
+        </member>
+        <member name="M:PAWSC.Scenes.Implementations.SkiaSharp3DScene.RenderScene(PAWSC.Scenes.DrawInfo)">
+            <summary>Override to render all 3D meshes.</summary>
+        </member>
+        <member name="M:PAWSC.Scenes.Implementations.SkiaSharpScene.RenderScene(PAWSC.Scenes.DrawInfo)">
+            <summary>
+            Override to implement the scene rendering on the full canvas.
+            </summary>
+        </member>
+        <member name="M:PAWSC.Scenes.Implementations.SkiaSharpScene.GetViewForInterface(PAWSC.Interfaces.IPawsInterface)">
+            <summary>
+            Defines a camera/view to crop or transform the main scene for an interface.
+            </summary>
+        </member>
+        <member name="M:PAWSC.Scenes.Implementations.SkiaSharpRasterScene.CreateViewImage(SkiaSharp.SKRect,PAWSC.Interfaces.IPawsInterface,SkiaSharp.SKImage,SkiaSharp.SKImageInfo)">
+            <summary>
+            Creates a cropped or transformed image from the main snapshot based on the view rectangle.
+            </summary>
+        </member>
+        <member name="M:PAWSC.Streaming.VideoStreamer.SendFrameAsync(System.Byte[],System.Threading.CancellationToken)">
+            <summary>
+            Push a frame expressed as RGBA bytes (R,G,B,A per pixel).
+            This method will convert/compress and send via OnNotification events.
+            </summary>
+        </member>
+    </members>
+</doc>
