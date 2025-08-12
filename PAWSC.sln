@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PAWSC", "PAWSC\PAWSC.csproj", "{3EBFB6A6-9661-4848-A84C-DC07E1E09699}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BLEStreamTester", "BLEStreamTester\BLEStreamTester.csproj", "{AA3439F0-729F-4A76-ABB9-1ACE1AB153D0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{3EBFB6A6-9661-4848-A84C-DC07E1E09699}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3EBFB6A6-9661-4848-A84C-DC07E1E09699}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3EBFB6A6-9661-4848-A84C-DC07E1E09699}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA3439F0-729F-4A76-ABB9-1ACE1AB153D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA3439F0-729F-4A76-ABB9-1ACE1AB153D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA3439F0-729F-4A76-ABB9-1ACE1AB153D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA3439F0-729F-4A76-ABB9-1ACE1AB153D0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
