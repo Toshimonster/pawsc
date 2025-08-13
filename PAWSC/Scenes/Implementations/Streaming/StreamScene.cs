@@ -19,7 +19,7 @@ public class StreamScene(Identifier identifier) : BaseScene(identifier), IGattCo
     public GattServiceDescription ServiceDescription { get; } =
         new GattServiceDescription()
         {
-            UUID = "0000f00d-0000-1000-8000-00805f9b34fb",
+            UUID = UuidRegistry.StreamService.ToString(),
             Primary = true
         };
 
@@ -69,7 +69,7 @@ public class StreamScene(Identifier identifier) : BaseScene(identifier), IGattCo
 
 public class PawsStreamInput(PawsRuntime runtime) : PawsServiceImplementations.PawsSceneCharacteristic<StreamScene>(
     runtime, 
-    "0000f00d-0000-1000-8000-00805f9b34fa", 
+    UuidRegistry.StreamCharacteristics.Data.ToString(), 
     CharacteristicFlags.Write)
 {
     // Small protocol: first byte of a write is a frame header:

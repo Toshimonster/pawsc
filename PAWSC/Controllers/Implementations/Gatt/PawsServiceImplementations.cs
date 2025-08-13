@@ -18,7 +18,7 @@ public static class PawsServiceImplementations
         var advert = new LEAdvertisement1Properties
         {
             Type = "peripheral",
-            ServiceUUIDs = new [] {"12345678-1234-5678-1234-56789abcdef9"},
+            ServiceUUIDs = new [] {UuidRegistry.AdvertisementService.ToString()},
             LocalName = "ToshiProto",
             Appearance = (ushort)0x0080,
             Discoverable = true,
@@ -32,7 +32,7 @@ public static class PawsServiceImplementations
         Console.WriteLine("AD");
         var gattServiceDescription = new GattServiceDescription
         {
-            UUID = "12345678-1234-5678-1234-56789abcdef0",
+            UUID = UuidRegistry.StateService.ToString(),
             Primary = true
         };
 
@@ -123,7 +123,7 @@ public static class PawsServiceImplementations
     }
 
     public class PawsStatesCharacteristic(PawsRuntime runtime) : PawsServiceImplementations.PawsStateCharacteristic(runtime,
-        "0694bc1c-0064-4bd7-9840-41fa65d7355e",
+        UuidRegistry.PawsCharacteristics.States.ToString(),
         CharacteristicFlags.Read)
     {
         public override Task<byte[]> ReadValueAsync()
@@ -138,7 +138,7 @@ public static class PawsServiceImplementations
     }
 
     public class PawsActiveStateCharacteristic(PawsRuntime runtime)
-        : PawsServiceImplementations.PawsStateCharacteristic(runtime, "81a6a500-b85e-4951-b6ac-b63c8f97f678", CharacteristicFlags.Notify)
+        : PawsServiceImplementations.PawsStateCharacteristic(runtime, UuidRegistry.PawsCharacteristics.State.ToString(), CharacteristicFlags.Notify)
     {
 
         public override Task<byte[]> ReadValueAsync()
@@ -194,7 +194,7 @@ public static class PawsServiceImplementations
     public class StreamDataCharacteristic : PawsServiceImplementations.PawsCharacteristic
     {
         public StreamDataCharacteristic(PawsRuntime runtime)
-            : base(runtime, StreamGattUuids.DataCharacteristic, CharacteristicFlags.Notify)
+            : base(runtime, UuidRegistry.StreamCharacteristics.Data.ToString(), CharacteristicFlags.Notify)
         {
         }
 
@@ -223,7 +223,7 @@ public static class PawsServiceImplementations
         protected LEAdvertisement1Properties Advertisement { get; } = new LEAdvertisement1Properties
         {
             Type = "peripheral",
-            ServiceUUIDs = new [] {"12345678-1234-5678-1234-56789abcdef9"},
+            ServiceUUIDs = new [] {UuidRegistry.AdvertisementService.ToString()},
             LocalName = "ToshiProto",
             Appearance = (ushort)0x0080,
             Discoverable = true,
@@ -400,7 +400,7 @@ public static class PawsServiceImplementations
                 var advertisement = new LEAdvertisement1Properties
                 {
                     Type = "peripheral",
-                    ServiceUUIDs = new[] { "12345678-1234-5678-1234-56789abcdef0" },
+                    ServiceUUIDs = new[] { UuidRegistry.StateService.ToString() },
                     LocalName = "PAWSC-Controller",
                     Appearance = (ushort)0x0080, // Generic HID
                     Discoverable = true,

@@ -26,14 +26,14 @@ public abstract class GameScene(Identifier id) : SkiaSharpScene(id, 64, 32), IGa
 
     public GattServiceDescription ServiceDescription { get; private set; } = new GattServiceDescription()
     {
-        UUID = "2BC9D63F-F9C6-479E-B815-EAA9D3A03F8D",
+        UUID = UuidRegistry.GameService.ToString(),
         Primary = true
     };
 
     public IEnumerable<GattCharacteristicDescription> Characteristics { get; private set; } = [];
 }
 
-public class GameControllerCharacteristic(PawsRuntime runtime) : PawsServiceImplementations.PawsCharacteristic(runtime, "327FE31A-3EC0-47AF-A1AD-65C5067D670A", CharacteristicFlags.Write)
+public class GameControllerCharacteristic(PawsRuntime runtime) : PawsServiceImplementations.PawsCharacteristic(runtime, UuidRegistry.GameCharacteristics.Controller.ToString(), CharacteristicFlags.Write)
 {
     public event EventHandler<ControllerValues>? OnInput;
 

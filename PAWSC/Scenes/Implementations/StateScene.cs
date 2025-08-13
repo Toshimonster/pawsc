@@ -190,7 +190,7 @@ public class StateScene : SkiaSharpRasterScene, IGattControllableDefinition
 
     public GattServiceDescription ServiceDescription { get; } = new GattServiceDescription
     {
-        UUID = "12345678-1234-5678-1234-56789abcdef0",
+        UUID = UuidRegistry.StateService.ToString(),
         Primary = true
     };
 

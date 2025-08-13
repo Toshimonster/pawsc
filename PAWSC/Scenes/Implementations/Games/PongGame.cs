@@ -10,21 +10,21 @@ public class PongGame(Identifier id) : GameScene(id)
     private int playerScore = 0;
     private int aiScore = 0;
     private bool gameStarted = false;
-    
+
     // Paddles
     private const int PaddleWidth = 2;
     private const int PaddleHeight = 8;
     private float playerPaddleY = 12;
     private float aiPaddleY = 12;
     private const float PaddleSpeed = 40f; // pixels per second
-    
+
     // Ball
     private float ballX = 32;
     private float ballY = 16;
     private float ballVX = 30f;
     private float ballVY = 20f;
     private const int BallSize = 2;
-    
+
     // Game timing
     private DateTime lastUpdate = DateTime.UtcNow;
     private const double AiUpdateInterval = 0.1; // AI updates every 100ms
@@ -114,25 +114,25 @@ public class PongGame(Identifier id) : GameScene(id)
 
         if (!gameStarted)
         {
-            using var startFont = new SKFont { Size = 10 };
+            using var startFont = new SKFont { Size = 7 };
             using var startPaint = new SKPaint
             {
                 Color = SKColors.Yellow,
                 IsAntialias = false
             };
-            Canvas.DrawText("Press A to start", 15, 20, SKTextAlign.Left, startFont, startPaint);
+            Canvas.DrawText("Press A to start", 31, 20, SKTextAlign.Center, startFont, startPaint);
         }
 
         if (gameOver)
         {
-            using var gameOverFont = new SKFont { Size = 10 };
+            using var gameOverFont = new SKFont { Size = 7 };
             using var gameOverPaint = new SKPaint
             {
                 Color = SKColors.Red,
                 IsAntialias = false
             };
-            Canvas.DrawText("GAME OVER", 15, 20, SKTextAlign.Left, gameOverFont, gameOverPaint);
-            Canvas.DrawText("Press A to restart", 8, 28, SKTextAlign.Left, gameOverFont, gameOverPaint);
+            Canvas.DrawText("GAME OVER", 31, 20, SKTextAlign.Center, gameOverFont, gameOverPaint);
+            Canvas.DrawText("Press A to restart", 31, 28, SKTextAlign.Center, gameOverFont, gameOverPaint);
         }
     }
 
@@ -221,4 +221,4 @@ public class PongGame(Identifier id) : GameScene(id)
         ResetBall();
         aiTimer = 0.0;
     }
-} 
+}

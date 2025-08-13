@@ -36,7 +36,7 @@ public class TestController : PawsServiceImplementations.GattController
 
         // ===== STATE SCENES =====
         // Uncomment to test state management with GIFs
-        /*
+
         var state = new BaseState(new Identifier("Test"));
         var state2 = new BaseState(new Identifier("Test2"));
         if (File.Exists("./start.gif")) {
@@ -53,11 +53,11 @@ public class TestController : PawsServiceImplementations.GattController
         stateScene.AddState(state2);
         stateScene.SetStateFromId(state2.Id);
         runtime.Scenes?.Add(stateScene);
-        */
+
 
         // ===== BASIC SCENES =====
         // Uncomment to test basic rendering scenes
-        //runtime.Scenes?.Add(new SpinningCubeScene(new Identifier("TEST")));
+        // runtime.Scenes?.Add(new SpinningCubeScene(new Identifier("TEST")));
         // runtime.Scenes?.Add(new PulserScene(new Identifier("TEST")));
         // runtime.Scenes?.Add(new SkiaSharp3dScene(new Identifier("TEST")));
         // runtime.Scenes?.Add(new StreamScene(Identifier.Random()));
@@ -68,10 +68,10 @@ public class TestController : PawsServiceImplementations.GattController
         GameScene[] games = new GameScene[]
         {
             //new DinoGame(Identifier.Random()),
-            new SnakeGame(Identifier.Random()),
-            new PongGame(Identifier.Random()),
-            new TetrisGame(Identifier.Random()),
-            new SpaceInvadersGame(Identifier.Random())
+            //new SnakeGame(Identifier.Random()),
+            //new PongGame(Identifier.Random()),
+            //new TetrisGame(Identifier.Random()),
+            //new SpaceInvadersGame(Identifier.Random())
         };
 
         foreach (var game in games)
