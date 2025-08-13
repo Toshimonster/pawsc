@@ -57,17 +57,17 @@ public class TestController : PawsServiceImplementations.GattController
 
         // ===== BASIC SCENES =====
         // Uncomment to test basic rendering scenes
-        runtime.Scenes?.Add(new SpinningCubeScene(new Identifier("TEST")));
+        //runtime.Scenes?.Add(new SpinningCubeScene(new Identifier("TEST")));
         // runtime.Scenes?.Add(new PulserScene(new Identifier("TEST")));
         // runtime.Scenes?.Add(new SkiaSharp3dScene(new Identifier("TEST")));
         // runtime.Scenes?.Add(new StreamScene(Identifier.Random()));
 
         // ===== GAME SCENES =====
         // Uncomment to test all games
-        /*
+
         GameScene[] games = new GameScene[]
         {
-            new DinoGame(Identifier.Random()),
+            //new DinoGame(Identifier.Random()),
             new SnakeGame(Identifier.Random()),
             new PongGame(Identifier.Random()),
             new TetrisGame(Identifier.Random()),
@@ -78,7 +78,7 @@ public class TestController : PawsServiceImplementations.GattController
         {
             runtime.Scenes?.Add(game);
         }
-        */
+
 
         // ===== INDIVIDUAL GAME TESTING =====
         // Uncomment individual games to test them one by one

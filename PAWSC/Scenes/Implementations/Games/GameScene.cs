@@ -9,14 +9,10 @@ public abstract class GameScene(Identifier id) : SkiaSharpScene(id, 64, 32), IGa
 {
     private GameControllerCharacteristic? _controller = null;
 
-    protected override void RenderScene(DrawInfo drawInfo)
-    {
-        throw new NotImplementedException();
-    }
+    protected abstract override void RenderScene(DrawInfo drawInfo);
 
     public override Task Initialise(PawsRuntime runtime)
     {
-
         _controller = new GameControllerCharacteristic(runtime);
         _controller.OnInput += OnInput;
         Characteristics =
@@ -40,7 +36,7 @@ public abstract class GameScene(Identifier id) : SkiaSharpScene(id, 64, 32), IGa
 public class GameControllerCharacteristic(PawsRuntime runtime) : PawsServiceImplementations.PawsCharacteristic(runtime, "327FE31A-3EC0-47AF-A1AD-65C5067D670A", CharacteristicFlags.Write)
 {
     public event EventHandler<ControllerValues>? OnInput;
-    
+
     public override Task<byte[]> ReadValueAsync()
     {
         return Task.FromResult(Array.Empty<byte>());
@@ -55,7 +51,7 @@ public class GameControllerCharacteristic(PawsRuntime runtime) : PawsServiceImpl
 
         if (!Enum.IsDefined(control))
             return Task.CompletedTask;
-        
+
         OnInput?.Invoke(this, control);
 
         return Task.CompletedTask;

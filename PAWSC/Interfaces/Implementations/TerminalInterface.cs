@@ -5,7 +5,7 @@ namespace PAWSC.Interfaces.Implementations;
 
 public class TerminalInterface(int width, int height) : IPawsInterface
 {
-    
+
     public PawsInterfaceInfo InterfaceInfo { get; } = new()
     {
         Width = width,

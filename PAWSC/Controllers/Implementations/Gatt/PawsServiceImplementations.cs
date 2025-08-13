@@ -12,27 +12,6 @@ namespace PAWSC.Controllers.Implementations.Gatt;
 
 public static class PawsServiceImplementations
 {
-
-    public static async Task RegisterGattApplication(PawsRuntime runtime)
-    {
-        try
-        {
-            using var ctx = new ServerContext();
-            await ctx.ConnectAndSetDefaultAdapter();
-            await ctx.Adapter.SetPoweredAsync(true);
-
-            if (!await ctx.Adapter.GetPoweredAsync())
-            {
-                throw new Exception("Cant power adapter");
-            }
-
-            await RegisterGattApplication(ctx, runtime);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-        }
-    }
     public static async Task RegisterGattApplication(ServerContext ctx, PawsRuntime pawsRuntime)
     {
         Console.WriteLine("START");
@@ -48,8 +27,8 @@ public static class PawsServiceImplementations
 
         var mgr = new AdvertisingManager(ctx);
         await mgr.CreateAdvertisement(advert);
-            
-        
+
+
         Console.WriteLine("AD");
         var gattServiceDescription = new GattServiceDescription
         {
@@ -58,21 +37,21 @@ public static class PawsServiceImplementations
         };
 
         var x = new PawsStatesCharacteristic(pawsRuntime);
-        
+
         var gab = new GattApplicationBuilder();
         var service = gab
             .AddService(gattServiceDescription);
-        
+
         service.WithCharacteristic(x, []);
         service.WithCharacteristic(new PawsActiveStateCharacteristic(pawsRuntime), []);
-        
+
 
         Console.WriteLine("BUILD");
-        
+
         await new GattApplicationManager(ctx)
             .RegisterGattApplication(gab.BuildServiceDescriptions());
         Console.WriteLine("Done");
-        
+
         AppDomain.CurrentDomain.ProcessExit += async (_, _) =>
         {
             Console.WriteLine("Cleaning up...");
@@ -129,7 +108,7 @@ public static class PawsServiceImplementations
             return null;
         }}
     }
-    
+
     public abstract class PawsSceneCharacteristic<T>(PawsRuntime runtime, string uuid, CharacteristicFlags flags) : PawsCharacteristic(runtime, uuid, flags)
     where T: IPawsScene
     {
@@ -161,7 +140,7 @@ public static class PawsServiceImplementations
     public class PawsActiveStateCharacteristic(PawsRuntime runtime)
         : PawsServiceImplementations.PawsStateCharacteristic(runtime, "81a6a500-b85e-4951-b6ac-b63c8f97f678", CharacteristicFlags.Notify)
     {
-        
+
         public override Task<byte[]> ReadValueAsync()
         {
             var activeState = ActiveStateScene?.ActiveState;
@@ -179,11 +158,11 @@ public static class PawsServiceImplementations
             return base.WriteValueAsync(value);
         }
     }
-    
+
     /*
     public class StreamControlCharacteristic : PawsSceneCharacteristic<StreamScene
     {
-        public StreamControlCharacteristic(PawsRuntime runtime) 
+        public StreamControlCharacteristic(PawsRuntime runtime)
             : base(runtime, "300751B6-1450-4D27-BE88-23B53A2FA3E9", CharacteristicFlags.Write)
         {
         }
@@ -211,7 +190,7 @@ public static class PawsServiceImplementations
             return Task.CompletedTask;
         }
     }
-    
+
     public class StreamDataCharacteristic : PawsServiceImplementations.PawsCharacteristic
     {
         public StreamDataCharacteristic(PawsRuntime runtime)
@@ -235,7 +214,8 @@ public static class PawsServiceImplementations
     public class GattController(Identifier id) : PawsController(id), IPawsAfterInitialisableHook, IDisposable
     {
         public bool IsRegistered { get; private set; } = false;
-        private GattApplicationBuilder AppBuilder { get; set; } = new GattApplicationBuilder();
+        private GattApplicationBuilder AppBuilder { get; } = new GattApplicationBuilder();
+        private HashSet<string> SubscribedServices { get; } = new HashSet<string>();
         /**
          * Only exists after AfterInit is successful (app is running)
          */
@@ -259,7 +239,13 @@ public static class PawsServiceImplementations
         {
             if (IsRegistered)
                 throw new InvalidOperationException("Gatt Controller is already registered");
-            
+
+            if (!SubscribedServices.Add(serviceDescription.UUID))
+            {
+                Console.WriteLine(serviceDescription.UUID + " : Gatt Service already registered, skipping...");
+                return;
+            }
+
             var builder = AppBuilder.AddService(serviceDescription);
             foreach (var characteristic in characteristics)
             {
@@ -287,7 +273,7 @@ public static class PawsServiceImplementations
                 Console.WriteLine("   This is likely due to missing system permissions or Bluetooth service not running.");
                 Console.WriteLine("   The application will continue without Bluetooth functionality.");
                 Console.WriteLine($"   Error details: {ex.Message}");
-                
+
                 // Continue without Bluetooth - this is a non-fatal error
                 // The application can still function with other interfaces
             }
@@ -295,7 +281,7 @@ public static class PawsServiceImplementations
             {
                 Console.WriteLine($"❌ Failed to start GATT server: {ex.Message}");
                 Console.WriteLine("   The application will continue without Bluetooth functionality.");
-                
+
                 // Log the full exception for debugging but don't crash
                 Console.WriteLine($"   Full exception: {ex}");
             }
@@ -306,20 +292,20 @@ public static class PawsServiceImplementations
             try
             {
                 var gattServices = runtime.Scenes.ValuesOfType<IGattControllableDefinition>().ToList();
-                
+
                 if (gattServices.Count == 0)
                 {
                     Console.WriteLine("ℹ️  No GATT controllable scenes found. Using basic service.");
                     return Task.CompletedTask;
                 }
-                
+
                 Console.WriteLine($"🔍 Found {gattServices.Count} GATT controllable scenes");
                 foreach (var gattControllableDefinition in gattServices)
                 {
                     RegisterService(gattControllableDefinition);
                     Console.WriteLine($"✅ Registered GATT service for: {gattControllableDefinition.GetType().Name}");
                 }
-                
+
                 return Task.CompletedTask;
             }
             catch (Exception ex)
@@ -328,22 +314,22 @@ public static class PawsServiceImplementations
                 return Task.CompletedTask;
             }
         }
-        
+
         private async Task<bool> IsBluetoothAvailableAsync()
         {
             try
             {
                 Console.WriteLine("🔍 Checking Bluetooth availability...");
-                
+
                 // Simple check: try to create a server context
                 // If this fails, Bluetooth is not available
                 var testContext = new ServerContext();
                 await testContext.ConnectAndSetDefaultAdapter();
-                
+
                 var adapter = testContext.Adapter;
                 var powered = await adapter.GetPoweredAsync();
                 var address = await adapter.GetAddressAsync();
-                
+
                 Console.WriteLine($"✅ Bluetooth adapter found: {address}, Powered: {powered}");
                 return true;
             }
@@ -365,38 +351,21 @@ public static class PawsServiceImplementations
             try
             {
                 Console.WriteLine("🚀 Starting GATT server...");
-                
+
                 ServerContext = new ServerContext();
                 await ServerContext.ConnectAndSetDefaultAdapter();
-                
+
                 // Ensure adapter is powered on
                 await ServerContext.Adapter.SetPoweredAsync(true);
                 await Task.Delay(1000); // Give adapter time to power up
-                
+
                 if (!await ServerContext.Adapter.GetPoweredAsync())
                 {
                     throw new Exception("Could not power adapter.");
                 }
-                
+
                 var adapterAddress = await ServerContext.Adapter.GetAddressAsync();
                 Console.WriteLine($"✅ Bluetooth adapter ready: {adapterAddress}");
-
-                // Create and register a basic GATT service
-                var gattServiceDescription = new GattServiceDescription
-                {
-                    UUID = "12345678-1234-5678-1234-56789abcdef0",
-                    Primary = true
-                };
-
-                var gattApplicationBuilder = new GattApplicationBuilder();
-                var service = gattApplicationBuilder.AddService(gattServiceDescription);
-
-                // Add a basic characteristic for testing using PawsGattCharacteristic
-                var testCharacteristic = new PawsGattCharacteristic();
-                testCharacteristic.UUID = "12345678-1234-5678-1234-56789abcdef1";
-                testCharacteristic.Flags = CharacteristicFlags.Read | CharacteristicFlags.Write;
-
-                service.WithCharacteristic(testCharacteristic, []);
 
                 // Start advertisement first
                 await StartAdvertisement(ServerContext);
@@ -404,11 +373,11 @@ public static class PawsServiceImplementations
                 // Register the GATT application
                 Console.WriteLine("📝 Registering GATT application...");
                 var gattManager = new GattApplicationManager(ServerContext);
-                await gattManager.RegisterGattApplication(gattApplicationBuilder.BuildServiceDescriptions());
+                await gattManager.RegisterGattApplication(AppBuilder.BuildServiceDescriptions());
 
                 AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
                 IsRegistered = true;
-                
+
                 Console.WriteLine("✅ GATT server started successfully with basic service");
             }
             catch (Tmds.DBus.DBusException ex) when (ex.ErrorName?.Contains("org.bluez.Error.Failed") == true)
@@ -426,7 +395,7 @@ public static class PawsServiceImplementations
             try
             {
                 var mgr = new AdvertisingManager(serverContext);
-                
+
                 // Create a proper advertisement with the service UUID
                 var advertisement = new LEAdvertisement1Properties
                 {
@@ -437,7 +406,7 @@ public static class PawsServiceImplementations
                     Discoverable = true,
                     IncludeTxPower = true
                 };
-                
+
                 await mgr.CreateAdvertisement(advertisement);
                 Console.WriteLine("✅ Bluetooth advertisement started successfully");
             }

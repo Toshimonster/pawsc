@@ -15,20 +15,20 @@ class Program
         try
         {
             using var runtime = new PawsRuntime();
-            
+
             // Configure interfaces based on environment
             ConfigureInterfaces(runtime);
-            
+
             // Add controllers
             ConfigureControllers(runtime);
-            
+
             // Start the runtime
             await runtime.Start();
-            
+
             // Keep the application running
             Console.WriteLine("PAWSC runtime started. Press Ctrl+C to exit.");
             await Task.Delay(Timeout.Infinite);
-            
+
             return 0;
         }
         catch (Exception ex)
@@ -52,7 +52,7 @@ class Program
         {
             // Terminal interface for development/testing
             runtime.Interfaces.Add(new ToshiProtogenProxy<TerminalInterface>(
-                new Identifier("TEST"), 
+                new Identifier("TEST"),
                 new TerminalInterface(ToshiProtogenProxy<TerminalInterface>.Width, ToshiProtogenProxy<TerminalInterface>.Height)
                 {
                     Id = new Identifier("Term")
