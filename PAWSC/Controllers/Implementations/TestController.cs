@@ -4,7 +4,6 @@ using PAWSC.Interfaces.Implementations;
 using PAWSC.Runtime;
 using PAWSC.Scenes.Implementations;
 using PAWSC.Scenes.Implementations.Games;
-using PAWSC.Scenes.Implementations.Streaming;
 
 namespace PAWSC.Controllers.Implementations;
 
@@ -15,7 +14,7 @@ namespace PAWSC.Controllers.Implementations;
 /// This controller is primarily used for testing and demonstration purposes.
 /// Comment/uncomment different scenes to test various PAWS system capabilities.
 /// </remarks>
-public class TestController : PawsServiceImplementations.GattController
+public class TestController : GattController
 {
     /// <summary>
     /// Initializes a new instance of the TestController class.

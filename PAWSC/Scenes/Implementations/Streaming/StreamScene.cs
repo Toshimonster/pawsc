@@ -10,7 +10,7 @@ namespace PAWSC.Scenes.Implementations.Streaming;
 public class StreamScene(Identifier identifier) : BaseScene(identifier), IGattControllableDefinition
 {
     private PawsStreamInput? _streamChar = null;
-    
+
     // Single latest frame; overwritten as new frames arrive.
     // We keep a separate buffer to avoid holding onto ArrayPool arrays.
     private readonly object _frameLock = new();
@@ -24,17 +24,17 @@ public class StreamScene(Identifier identifier) : BaseScene(identifier), IGattCo
         };
 
     public IEnumerable<GattCharacteristicDescription> Characteristics { get; private set; } = [];
-    
+
     public override Task Initialise(PawsRuntime runtime)
     {
         _streamChar = new PawsStreamInput(runtime);
         _streamChar.FrameReady += OnFrameReady;
-        
+
         Characteristics =
         [
             _streamChar
         ];
-        
+
         return Task.CompletedTask;
     }
 
@@ -68,8 +68,8 @@ public class StreamScene(Identifier identifier) : BaseScene(identifier), IGattCo
 }
 
 public class PawsStreamInput(PawsRuntime runtime) : PawsServiceImplementations.PawsSceneCharacteristic<StreamScene>(
-    runtime, 
-    UuidRegistry.StreamCharacteristics.Data.ToString(), 
+    runtime,
+    UuidRegistry.StreamCharacteristics.Data,
     CharacteristicFlags.Write)
 {
     // Small protocol: first byte of a write is a frame header:
@@ -83,9 +83,9 @@ public class PawsStreamInput(PawsRuntime runtime) : PawsServiceImplementations.P
     private byte[]? _currentFrameBuffer;
     private int _currentFrameExpected = 0;
     private int _currentFrameOffset = 0;
-    
+
     public event EventHandler<byte[]>? FrameReady; // raised when a full frame is assembled
-    
+
     // Reads are not used in streaming write scenario; return empty.
     public override Task<byte[]> ReadValueAsync() => Task.FromResult(Array.Empty<byte>());
 

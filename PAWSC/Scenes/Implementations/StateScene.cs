@@ -19,7 +19,7 @@ public interface IPawsGif : IIdentifiable
 public record PawsGif(Identifier Id) : IPawsGif
 {
     public SKCodec Codec { get; private init; } = null!;
-    
+
     public static PawsGif FromFile(string path, Identifier id)
     {
         var codec = SKCodec.Create(path);
@@ -45,7 +45,7 @@ public class BaseState(Identifier id) : IPawsState
     {
         Definition[interfaces] = gif;
     }
-    
+
     public void AddGif(Identifier iface, IPawsGif gif)
     {
         AddGif([iface], gif);
@@ -60,7 +60,7 @@ public class StateScene : SkiaSharpRasterScene, IGattControllableDefinition
     {
         States = definitions;
     }
-    
+
     public StateScene(Identifier id) : base(id)
     {
     }
@@ -69,7 +69,7 @@ public class StateScene : SkiaSharpRasterScene, IGattControllableDefinition
     {
         return States.Values;
     }
-    
+
     public void AddState(IPawsState state)
     {
         States.Add(state.Id, state);
@@ -118,7 +118,7 @@ public class StateScene : SkiaSharpRasterScene, IGattControllableDefinition
     {
         IPawsState? stateToDraw = ActiveStateObject;
         if (stateToDraw == null) return;
-        
+
         foreach (KeyValuePair<Identifier[], IPawsGif> keyValuePair in stateToDraw.Definition)
         {
             IEnumerable<IPawsInterface> ifaces = mgr.ById(keyValuePair.Key);
@@ -130,10 +130,10 @@ public class StateScene : SkiaSharpRasterScene, IGattControllableDefinition
     {
         Characteristics =
         [
-            new PawsServiceImplementations.PawsStatesCharacteristic(runtime),
-            new PawsServiceImplementations.PawsActiveStateCharacteristic(runtime)
+            new PawsStatesCharacteristic(runtime),
+            new PawsActiveStateCharacteristic(runtime)
         ];
-        
+
         return Task.CompletedTask;
     }
 
@@ -158,7 +158,7 @@ public class StateScene : SkiaSharpRasterScene, IGattControllableDefinition
             iface.Accept(data);
         }
     }
-    
+
     private int GetFrameIndex(long timeMs, SKCodecFrameInfo[] frames)
     {
         long totalDuration = frames.Sum(f => f.Duration);
@@ -195,4 +195,43 @@ public class StateScene : SkiaSharpRasterScene, IGattControllableDefinition
     };
 
     public IEnumerable<GattCharacteristicDescription> Characteristics { get; private set; } = new List<GattCharacteristicDescription>();
+
+    public class PawsStatesCharacteristic(PawsRuntime runtime) : PawsServiceImplementations.PawsStateCharacteristic(
+        runtime,
+        UuidRegistry.PawsCharacteristics.States,
+        CharacteristicFlags.Read)
+    {
+        public override Task<byte[]> ReadValueAsync()
+        {
+            var states = ActiveStateScene?.GetAllStates().ToList() ?? [];
+            return Task.FromResult(
+                EncodeFromString(
+                    string.Join(',', states.Select(x => x.Id))
+                )
+            );
+        }
+    }
+
+    public class PawsActiveStateCharacteristic(PawsRuntime runtime)
+        : PawsServiceImplementations.PawsStateCharacteristic(runtime, UuidRegistry.PawsCharacteristics.State,
+            CharacteristicFlags.Notify)
+    {
+
+        public override Task<byte[]> ReadValueAsync()
+        {
+            var activeState = ActiveStateScene?.ActiveState;
+            return Task.FromResult(
+                EncodeFromString(activeState?.ToString() ?? "")
+            );
+        }
+
+        public override Task WriteValueAsync(byte[]? value)
+        {
+            var stringId = DecodeToString(value);
+            var identifier = new Identifier(stringId);
+            Console.WriteLine(identifier);
+            ActiveStateScene?.SetStateFromId(identifier);
+            return base.WriteValueAsync(value);
+        }
+    }
 }

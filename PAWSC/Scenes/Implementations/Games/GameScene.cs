@@ -33,7 +33,7 @@ public abstract class GameScene(Identifier id) : SkiaSharpScene(id, 64, 32), IGa
     public IEnumerable<GattCharacteristicDescription> Characteristics { get; private set; } = [];
 }
 
-public class GameControllerCharacteristic(PawsRuntime runtime) : PawsServiceImplementations.PawsCharacteristic(runtime, UuidRegistry.GameCharacteristics.Controller.ToString(), CharacteristicFlags.Write)
+public class GameControllerCharacteristic(PawsRuntime runtime) : PawsServiceImplementations.PawsCharacteristic(runtime, UuidRegistry.GameCharacteristics.Controller, CharacteristicFlags.Write)
 {
     public event EventHandler<ControllerValues>? OnInput;
 
