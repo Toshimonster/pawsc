@@ -4,12 +4,12 @@ namespace PAWSC.Controllers.Implementations.Gatt;
 
 public class PawsGattCharacteristic : GattCharacteristicDescription
 {
-    public PawsGattCharacteristic(Guid UUID) : this(UUID.ToString())
+    public PawsGattCharacteristic(Guid UUID, CharacteristicFlags flags) : this(UUID.ToString(), flags)
     {
 
     }
 
-    public PawsGattCharacteristic(string uuid)
+    public PawsGattCharacteristic(string uuid, CharacteristicFlags flags)
     {
         UUID = uuid;
     }

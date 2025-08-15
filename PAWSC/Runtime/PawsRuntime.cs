@@ -147,12 +147,13 @@ public class PawsRuntime : PawsEventHandler, IDisposable
     public PawsRuntime()
     {
         _drawThread = new PawsDrawingThread(Interfaces);
+        RegisterCommands();
     }
 
     public async Task Start()
     {
         if (_disposed) throw new ObjectDisposedException(nameof(PawsRuntime));
-        
+
         try
         {
             await Interfaces.Initialise(this);
@@ -174,7 +175,9 @@ public class PawsRuntime : PawsEventHandler, IDisposable
     public void Dispose()
     {
         if (_disposed) return;
-        
+
+        DeregisterCommands();
+
         try
         {
             _drawThread?.Dispose();
@@ -188,6 +191,29 @@ public class PawsRuntime : PawsEventHandler, IDisposable
             _disposed = true;
         }
     }
+
+
+    private void RegisterCommands()
+    {
+        Subscribe<PawsCommands.SetScene>(OnSetScene);
+    }
+
+    private void DeregisterCommands()
+    {
+        Unsubscribe<PawsCommands.SetScene>(OnSetScene);
+    }
+
+    private void OnSetScene(PawsCommands.SetScene obj)
+    {
+        IPawsScene? sceneToSet = Scenes.ById(obj.Payload);
+        if (sceneToSet is null)
+        {
+            Broadcast(PawsCommands.Log.Error($"Cannot find scene {obj.Payload}"));
+            return;
+        }
+        _drawThread.SetScene(sceneToSet);
+    }
+
 
     private sealed class PawsDrawingThread : IDisposable
     {
@@ -219,7 +245,7 @@ public class PawsRuntime : PawsEventHandler, IDisposable
             if (Interlocked.Exchange(ref _running, true)) return;
 
             Console.CancelKeyPress += HandleCancelKeyPress;
-            
+
             _thread = new Thread(DrawLoop)
             {
                 IsBackground = true,
@@ -254,7 +280,7 @@ public class PawsRuntime : PawsEventHandler, IDisposable
                 {
                     var frameStart = DateTime.UtcNow;
                     var deltaTime = frameStart.Ticks - lastFrameTime.Ticks;
-                    
+
                     _scene?.Draw(_interfaceManager, new DrawInfo
                     {
                         Time = frameStart,

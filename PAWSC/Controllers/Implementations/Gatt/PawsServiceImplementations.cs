@@ -14,10 +14,9 @@ public static class PawsServiceImplementations
 {
     public abstract class PawsCharacteristic : PawsGattCharacteristic
     {
-        protected PawsCharacteristic(PawsRuntime runtime, Guid uuid, CharacteristicFlags flags) : base(uuid)
+        protected PawsCharacteristic(PawsRuntime runtime, Guid uuid, CharacteristicFlags flags) : base(uuid, flags)
         {
             Runtime = runtime;
-            Flags = flags;
         }
 
         protected PawsRuntime Runtime { get; }

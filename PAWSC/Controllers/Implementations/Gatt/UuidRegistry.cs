@@ -62,12 +62,13 @@ public static class UuidRegistry
         public static readonly Guid ControllerList = Register("CONTROLLER_LIST", "06d84d50-1e54-49b9-a749-1b4c9c7daf18");
         public static readonly Guid InterfaceList = Register("INTERFACE_LIST", "06d84d50-1e54-49b9-a749-1b4c9c7daf19");
 
+        public static readonly Guid ActiveScene = Register("PAWS_SCENE", "18eb891a-8e1b-4a0c-9374-d904f97b0b50");
+
         public static readonly Guid Timestamp = Register("PAWS_TIMESTAMP", "fa7abfe6-af90-42bf-a154-c2bdb7eb336a");
         public static readonly Guid Uptime = Register("PAWS_UPTIME", "97dcaa87-eaa8-4546-bb33-ad001fc3daf4");
         public static readonly Guid CpuTemp = Register("PAWS_CPU_TEMP", "31b0159a-d4bd-4396-9e77-7ebb24db6df3");
         public static readonly Guid CpuLoad = Register("PAWS_CPU_LOAD", "26414bca-7991-46e5-a559-376c7d515a1f");
         public static readonly Guid Network = Register("PAWS_NETWORK", "4bb22157-34d4-481c-949f-18aaa00f45e4");
-        public static readonly Guid Mode = Register("PAWS_MODE", "18eb891a-8e1b-4a0c-9374-d904f97b0b52");
     }
 
     /// <summary>

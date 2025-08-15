@@ -93,9 +93,12 @@ public class GattController(Identifier id) : PawsController(id), IPawsAfterIniti
         {
             var gattServices = runtime.Scenes.ValuesOfType<IGattControllableDefinition>().ToList();
 
+            Console.WriteLine("Registering Root Servie");
+            BuildRootService(runtime);
+
             if (gattServices.Count == 0)
             {
-                Console.WriteLine("ℹ️  No GATT controllable scenes found. Using basic service.");
+                Console.WriteLine("ℹ️  No GATT controllable scenes found.");
                 return Task.CompletedTask;
             }
 
@@ -239,7 +242,78 @@ public class GattController(Identifier id) : PawsController(id), IPawsAfterIniti
         ReleaseUnmanagedResources();
     }
 
-    public class TimestampCharacteristic() : PawsGattCharacteristic(UuidRegistry.RootCharacteristics.Timestamp)
+    #region Root Service & Characteristics
+
+    private static string StringFromIdentifiers(IEnumerable<Identifier> identifiers)
+    {
+        return string.Join(",", identifiers);
+    }
+
+    private static GattServiceDescription RootService = new GattServiceDescription()
+    {
+        UUID = UuidRegistry.RootService.ToString(),
+        Primary = true
+    };
+
+    public class SceneListCharacteristic(PawsRuntime runtime) : PawsServiceImplementations.PawsCharacteristic(
+        runtime,
+        UuidRegistry.RootCharacteristics.SceneList,
+        CharacteristicFlags.Read)
+    {
+        public override Task<byte[]> ReadValueAsync()
+        {
+            return Task.FromResult(EncodeFromString(StringFromIdentifiers(
+                Runtime.Scenes.GetAllIdentifiers()
+            )));
+        }
+    }
+
+    public class ControllerListCharacteristic(PawsRuntime runtime) : PawsServiceImplementations.PawsCharacteristic(
+        runtime,
+        UuidRegistry.RootCharacteristics.ControllerList,
+        CharacteristicFlags.Read)
+    {
+        public override Task<byte[]> ReadValueAsync()
+        {
+            return Task.FromResult(EncodeFromString(StringFromIdentifiers(
+                Runtime.Controllers.GetAllIdentifiers()
+            )));
+        }
+    }
+
+    public class InterfaceListCharacteristic(PawsRuntime runtime) : PawsServiceImplementations.PawsCharacteristic(
+        runtime,
+        UuidRegistry.RootCharacteristics.InterfaceList,
+        CharacteristicFlags.Read)
+    {
+        public override Task<byte[]> ReadValueAsync()
+        {
+            return Task.FromResult(EncodeFromString(StringFromIdentifiers(
+                Runtime.Interfaces.GetAllIdentifiers()
+            )));
+        }
+    }
+
+    public class SceneCharacteristic(PawsRuntime runtime) : PawsServiceImplementations.PawsCharacteristic(
+        runtime,
+        UuidRegistry.RootCharacteristics.ActiveScene,
+        CharacteristicFlags.Notify)
+    {
+        public override Task<byte[]> ReadValueAsync()
+        {
+            return Task.FromResult(EncodeFromString(Runtime.ActiveScene?.Id.ToString() ?? ""));
+        }
+
+        public override Task WriteValueAsync(byte[] value)
+        {
+            Runtime.Broadcast(new PawsCommands.SetScene(new Identifier(DecodeToString(value))));
+            return Task.CompletedTask;
+        }
+    }
+
+    public class TimestampCharacteristic() : PawsGattCharacteristic(
+        UuidRegistry.RootCharacteristics.Timestamp,
+        CharacteristicFlags.Read)
     {
         public override Task<byte[]> ReadValueAsync()
         {
@@ -247,7 +321,9 @@ public class GattController(Identifier id) : PawsController(id), IPawsAfterIniti
         }
     }
 
-    public class UptimeCharacteristic() : PawsGattCharacteristic(UuidRegistry.RootCharacteristics.Uptime)
+    public class UptimeCharacteristic() : PawsGattCharacteristic(
+        UuidRegistry.RootCharacteristics.Uptime,
+        CharacteristicFlags.Read)
     {
         public override async Task<byte[]> ReadValueAsync()
         {
@@ -274,7 +350,9 @@ public class GattController(Identifier id) : PawsController(id), IPawsAfterIniti
         }
     }
 
-    public class CpuTempCharacteristic() : PawsGattCharacteristic(UuidRegistry.RootCharacteristics.CpuTemp)
+    public class CpuTempCharacteristic() : PawsGattCharacteristic(
+        UuidRegistry.RootCharacteristics.CpuTemp,
+        CharacteristicFlags.Read)
     {
         public override async Task<byte[]> ReadValueAsync()
         {
@@ -300,7 +378,9 @@ public class GattController(Identifier id) : PawsController(id), IPawsAfterIniti
         }
     }
 
-    public class CpuLoadCharacteristic() : PawsGattCharacteristic(UuidRegistry.RootCharacteristics.CpuLoad)
+    public class CpuLoadCharacteristic() : PawsGattCharacteristic(
+        UuidRegistry.RootCharacteristics.CpuLoad,
+        CharacteristicFlags.Read)
     {
         public override async Task<byte[]> ReadValueAsync()
         {
@@ -327,7 +407,9 @@ public class GattController(Identifier id) : PawsController(id), IPawsAfterIniti
         }
     }
 
-    public class NetworkCharacteristic() : PawsGattCharacteristic(UuidRegistry.RootCharacteristics.Network)
+    public class NetworkCharacteristic() : PawsGattCharacteristic(
+        UuidRegistry.RootCharacteristics.Network,
+        CharacteristicFlags.Read)
     {
         public override async Task<byte[]> ReadValueAsync()
         {
@@ -372,4 +454,24 @@ public class GattController(Identifier id) : PawsController(id), IPawsAfterIniti
             }
         }
     }
+
+    private GattServiceBuilder BuildRootService(PawsRuntime runtime)
+    {
+        //TODO use register service instead
+        var service = AppBuilder.AddService(RootService);
+        service.WithCharacteristic(new SceneListCharacteristic(runtime), []);
+        service.WithCharacteristic(new ControllerListCharacteristic(runtime), []);
+        service.WithCharacteristic(new InterfaceListCharacteristic(runtime), []);
+        service.WithCharacteristic(new SceneCharacteristic(runtime), []);
+        service.WithCharacteristic(new TimestampCharacteristic(), []);
+        service.WithCharacteristic(new UptimeCharacteristic(), []);
+        service.WithCharacteristic(new CpuTempCharacteristic(), []);
+        service.WithCharacteristic(new CpuLoadCharacteristic(), []);
+        service.WithCharacteristic(new UptimeCharacteristic(), []);
+        return service;
+    }
+
+    #endregion
+
+
 }

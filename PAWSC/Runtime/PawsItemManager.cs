@@ -21,7 +21,7 @@ public abstract class PawsItemManager<T> : IPawsInitialisable where T : IIdentif
         if (item == null) throw new ArgumentNullException(nameof(item));
         return _items.TryAdd(item.Id, item);
     }
-    
+
     /// <summary>
     /// Removes an item from the manager.
     /// </summary>
@@ -56,7 +56,7 @@ public abstract class PawsItemManager<T> : IPawsInitialisable where T : IIdentif
         if (ids == null) throw new ArgumentNullException(nameof(ids));
         return ids.Select(ById).Where(item => item != null)!;
     }
-    
+
     /// <summary>
     /// Gets all items in the manager.
     /// </summary>
@@ -64,6 +64,15 @@ public abstract class PawsItemManager<T> : IPawsInitialisable where T : IIdentif
     public IReadOnlyList<T> GetAll()
     {
         return _items.Values.ToList().AsReadOnly();
+    }
+
+    /// <summary>
+    /// Gets all identifiers in the manager.
+    /// </summary>
+    /// <returns>A read-only list of all identifiers.</returns>
+    public IReadOnlyList<Identifier> GetAllIdentifiers()
+    {
+        return _items.Keys.ToList().AsReadOnly();
     }
 
     /// <summary>
@@ -75,7 +84,7 @@ public abstract class PawsItemManager<T> : IPawsInitialisable where T : IIdentif
     {
         return _items.Values.OfType<T2>();
     }
-    
+
     /// <summary>
     /// Initializes all items in the manager.
     /// </summary>
@@ -85,7 +94,7 @@ public abstract class PawsItemManager<T> : IPawsInitialisable where T : IIdentif
     public async Task Initialise(PawsRuntime pawsRuntime)
     {
         if (pawsRuntime == null) throw new ArgumentNullException(nameof(pawsRuntime));
-        
+
         var tasks = GetAll().Select(x => x.Initialise(pawsRuntime));
         await Task.WhenAll(tasks);
     }
@@ -99,12 +108,12 @@ public abstract class PawsItemManager<T> : IPawsInitialisable where T : IIdentif
     public async Task AfterInitialise(PawsRuntime pawsRuntime)
     {
         if (pawsRuntime == null) throw new ArgumentNullException(nameof(pawsRuntime));
-        
+
         var tasks = GetAll()
             .Where(x => x is IPawsAfterInitialisableHook)
             .Cast<IPawsAfterInitialisableHook>()
             .Select(x => x.AfterInitialise(pawsRuntime));
-        
+
         await Task.WhenAll(tasks);
     }
 }
