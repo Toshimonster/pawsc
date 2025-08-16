@@ -145,6 +145,16 @@ If you encounter build issues:
    dotnet add package [PackageName] --version [Version]
    ```
 
+## SETUP:
+1) Ensure bluetoothd is running with --experimental and --noplugin=*
+2) Use the following env vars:
+   ```bash:
+   export DOTNET_ROOT=$HOME/.dotnet
+   export PATH=$PATH:$HOME/.dotnet
+   export LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libfreetype.so.6
+   export LD_PRELOAD=$LD_PRELOAD:/lib/aarch64-linux-gnu/libuuid.so.1
+   ```
+
 ## License
 
 This project is proprietary software.

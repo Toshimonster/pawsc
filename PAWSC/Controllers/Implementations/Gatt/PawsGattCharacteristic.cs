@@ -12,6 +12,7 @@ public class PawsGattCharacteristic : GattCharacteristicDescription
     public PawsGattCharacteristic(string uuid, CharacteristicFlags flags)
     {
         UUID = uuid;
+        Flags = flags;
     }
 
     public override Task<byte[]> ReadValueAsync()
@@ -53,6 +54,23 @@ public class PawsGattCharacteristic : GattCharacteristicDescription
         try
         {
             return BitConverter.ToInt32(value);
+        }
+        catch
+        {
+            return 0;
+        }
+    }
+
+    protected static byte[] EncodeFromDouble(double value)
+    {
+        return BitConverter.GetBytes(value);
+    }
+
+    protected static double DecodeFromDouble(byte[]? value)
+    {
+        try
+        {
+            return BitConverter.ToDouble(value);
         }
         catch
         {

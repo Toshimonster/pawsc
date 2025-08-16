@@ -17,10 +17,10 @@ public abstract class SkiaSharp3DScene : SkiaSharpScene
         public float NearPlane = 0.1f;
         public float FarPlane = 100f;
 
-        public Matrix4x4 GetViewMatrix() => 
+        public Matrix4x4 GetViewMatrix() =>
             Matrix4x4.CreateLookAt(Position, Target, Up);
 
-        public Matrix4x4 GetProjectionMatrix() => 
+        public Matrix4x4 GetProjectionMatrix() =>
             Matrix4x4.CreatePerspectiveFieldOfView(
                 MathF.PI * FovDegrees / 180f,
                 AspectRatio,
@@ -69,14 +69,14 @@ public abstract class SkiaSharp3DScene : SkiaSharpScene
 
         using var snapshot = Surface.Snapshot();
 
-        foreach (var iface in mgr.GetAll())
+        foreach (var iface in mgr.GetAllValues())
         {
             var view = GetViewForInterface(iface);
             if (view == null) continue;
 
             using var viewImage = CreateViewImage((SKRect)view, iface, snapshot, SceneImageInfo);
             if (viewImage is null) continue;
-            
+
             var encoded = viewImage.PeekPixels().GetPixels();
 
             var len = iface.InterfaceInfo.GetByteSize();

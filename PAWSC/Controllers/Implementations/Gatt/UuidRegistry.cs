@@ -10,6 +10,8 @@ namespace PAWSC.Controllers.Implementations.Gatt;
 /// </summary>
 public static class UuidRegistry
 {
+    public static readonly Guid CharacteristicUserDescription = new("00002901-0000-1000-8000-00805f9b34fb");
+
     private static readonly Dictionary<string, Guid> _uuidCache = new();
     private static readonly Dictionary<Guid, string> _reverseLookup = new();
     private static readonly object _lock = new();
@@ -59,6 +61,7 @@ public static class UuidRegistry
     public static class RootCharacteristics
     {
         public static readonly Guid SceneList = Register("SCENE_LIST", "06d84d50-1e54-49b9-a749-1b4c9c7daf17");
+        public static readonly Guid ServiceList = Register("SERVICE_LIST", "EAC661BA-7D06-4C30-87C6-7F45985E3FE4");
         public static readonly Guid ControllerList = Register("CONTROLLER_LIST", "06d84d50-1e54-49b9-a749-1b4c9c7daf18");
         public static readonly Guid InterfaceList = Register("INTERFACE_LIST", "06d84d50-1e54-49b9-a749-1b4c9c7daf19");
 

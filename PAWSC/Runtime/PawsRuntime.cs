@@ -159,7 +159,7 @@ public class PawsRuntime : PawsEventHandler, IDisposable
             await Interfaces.Initialise(this);
             await Controllers.Initialise(this);
             await Scenes.Initialise(this);
-            _drawThread.SetScene(Scenes.GetAll().FirstOrDefault());
+            _drawThread.SetScene(Scenes.GetAllValues().FirstOrDefault());
             _drawThread.Start();
             await Interfaces.AfterInitialise(this);
             await Controllers.AfterInitialise(this);

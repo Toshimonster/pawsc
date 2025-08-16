@@ -1,4 +1,5 @@
-﻿using PAWSC.Runtime;
+﻿using System.Collections.ObjectModel;
+using PAWSC.Runtime;
 
 namespace PAWSC.Runtime;
 
@@ -61,7 +62,16 @@ public abstract class PawsItemManager<T> : IPawsInitialisable where T : IIdentif
     /// Gets all items in the manager.
     /// </summary>
     /// <returns>A read-only list of all items.</returns>
-    public IReadOnlyList<T> GetAll()
+    public ReadOnlyCollection<KeyValuePair<Identifier, T>> GetAll()
+    {
+        return _items.ToList().AsReadOnly();
+    }
+
+    /// <summary>
+    /// Gets all items in the manager.
+    /// </summary>
+    /// <returns>A read-only list of all items.</returns>
+    public IReadOnlyList<T> GetAllValues()
     {
         return _items.Values.ToList().AsReadOnly();
     }
@@ -95,7 +105,7 @@ public abstract class PawsItemManager<T> : IPawsInitialisable where T : IIdentif
     {
         if (pawsRuntime == null) throw new ArgumentNullException(nameof(pawsRuntime));
 
-        var tasks = GetAll().Select(x => x.Initialise(pawsRuntime));
+        var tasks = GetAllValues().Select(x => x.Initialise(pawsRuntime));
         await Task.WhenAll(tasks);
     }
 
@@ -109,7 +119,7 @@ public abstract class PawsItemManager<T> : IPawsInitialisable where T : IIdentif
     {
         if (pawsRuntime == null) throw new ArgumentNullException(nameof(pawsRuntime));
 
-        var tasks = GetAll()
+        var tasks = GetAllValues()
             .Where(x => x is IPawsAfterInitialisableHook)
             .Cast<IPawsAfterInitialisableHook>()
             .Select(x => x.AfterInitialise(pawsRuntime));

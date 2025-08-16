@@ -34,13 +34,13 @@ public abstract class SkiaSharpScene : SkiaSharpRasterScene
         using var snapshot = Surface.Snapshot();
 
         // For each interface, generate a view and send its image data
-        foreach (var iface in mgr.GetAll())
+        foreach (var iface in mgr.GetAllValues())
         {
             var viewInfo = GetViewForInterface(iface);
             if (viewInfo is null) continue;
 
             var data = GetBytesForIface(iface, snapshot, viewInfo ?? throw new AccessViolationException());
-            
+
             iface.Accept(new ReadOnlySpan<byte>(data));
         }
     }
@@ -49,7 +49,7 @@ public abstract class SkiaSharpScene : SkiaSharpRasterScene
     /// Override to implement the scene rendering on the full canvas.
     /// </summary>
     protected abstract void RenderScene(DrawInfo drawInfo);
-    
+
     /// <summary>
     /// Defines a camera/view to crop or transform the main scene for an interface.
     /// </summary>
@@ -65,19 +65,19 @@ public abstract class SkiaSharpRasterScene(Identifier identifier) : BaseScene(id
     public static SKImage? ScaleImage(SKImage image, PawsInterfaceInfo ifaceInterfaceInfo)
     {
         // If the cropped size matches target resolution, return directly
-        if (image.Width == ifaceInterfaceInfo.Width && 
+        if (image.Width == ifaceInterfaceInfo.Width &&
             image.Height == ifaceInterfaceInfo.Height &&
             image.ColorType == GetColorType(ifaceInterfaceInfo))
         {
             return image;
         }
-        
+
         var scaledInfo = new SKImageInfo(ifaceInterfaceInfo.Width, ifaceInterfaceInfo.Height, GetColorType(ifaceInterfaceInfo), image.AlphaType);
         using var modSurface = SKSurface.Create(scaledInfo);
 
         if (modSurface is null)
             return null;
-        
+
         var modCanvas = modSurface.Canvas;
         modCanvas.Clear(SKColors.Transparent);
 
@@ -88,7 +88,7 @@ public abstract class SkiaSharpRasterScene(Identifier identifier) : BaseScene(id
         // Return the scaled image snapshot
         return modSurface.Snapshot();
     }
-    
+
     private static SKColorType GetColorType(PawsInterfaceInfo info)
     {
         return info.ByteRepresentation switch
@@ -124,7 +124,7 @@ public abstract class SkiaSharpRasterScene(Identifier identifier) : BaseScene(id
     {
         return GetBytesForIface(iface, img, new SKRect(0, 0, img.Width, img.Height));
     }
-    
+
     protected byte[] GetBytesForIface(IPawsInterface iface, SKImage img, SKRect customView)
     {
         using SKImage? viewImage = SkiaSharpScene.CreateViewImage(customView,

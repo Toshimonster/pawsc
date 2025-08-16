@@ -1,3 +1,4 @@
+using System.Reflection;
 using DotnetBleServer.Advertisements;
 using DotnetBleServer.Core;
 using DotnetBleServer.Gatt;
@@ -34,6 +35,37 @@ public class GattController(Identifier id) : PawsController(id), IPawsAfterIniti
         RegisterService(definition.ServiceDescription, definition.Characteristics);
     }
 
+    private void RegisterService(PawsRuntime runtime,
+        GattServiceDescription serviceDescription,
+        IEnumerable<Type> characteristics)
+    {
+        var instances = new List<GattCharacteristicDescription>();
+
+        foreach (var type in characteristics)
+        {
+            if (!type.IsClass)
+                throw new ArgumentException($"{type.Name} is not a class type");
+
+            var intCtor = type.GetConstructor([typeof(PawsRuntime)]);
+            GattCharacteristicDescription? instance = null;
+            if (intCtor != null)
+            {
+                instance = Activator.CreateInstance(type, runtime) as GattCharacteristicDescription;
+            }
+            else
+            {
+                instance = Activator.CreateInstance(type) as GattCharacteristicDescription;
+            }
+
+            if (instance == null)
+                throw new MissingMemberException($"{type.Name} - could not activate instance with either () or (runtime)");
+
+            instances.Add(instance);
+        }
+
+        RegisterService(serviceDescription, instances);
+    }
+
     private void RegisterService(GattServiceDescription serviceDescription,
         IEnumerable<GattCharacteristicDescription> characteristics)
     {
@@ -49,7 +81,13 @@ public class GattController(Identifier id) : PawsController(id), IPawsAfterIniti
         var builder = AppBuilder.AddService(serviceDescription);
         foreach (var characteristic in characteristics)
         {
-            builder.WithCharacteristic(characteristic, []);
+            var nameCharacteristic = new GattDescriptorDescription
+            {
+                UUID = UuidRegistry.CharacteristicUserDescription.ToString(),
+                Value = Encoding.UTF8.GetBytes(characteristic.GetType().Name),
+                Flags = ["read"]
+            };
+            builder.WithCharacteristic(characteristic, [nameCharacteristic]);
         }
     }
 
@@ -93,8 +131,10 @@ public class GattController(Identifier id) : PawsController(id), IPawsAfterIniti
         {
             var gattServices = runtime.Scenes.ValuesOfType<IGattControllableDefinition>().ToList();
 
-            Console.WriteLine("Registering Root Servie");
-            BuildRootService(runtime);
+            Console.WriteLine("Registering Root Service");
+            RegisterService(runtime,
+                RootService,
+                RootCharacteristics);
 
             if (gattServices.Count == 0)
             {
@@ -203,12 +243,16 @@ public class GattController(Identifier id) : PawsController(id), IPawsAfterIniti
             var advertisement = new LEAdvertisement1Properties
             {
                 Type = "peripheral",
-                ServiceUUIDs = new[] { UuidRegistry.StateService.ToString() },
                 LocalName = "PAWSC-Controller",
-                Appearance = (ushort)0x0080, // Generic HID
+                Appearance = 0x0080, // Generic HID
                 Discoverable = true,
                 IncludeTxPower = true
             };
+            var firstUUID = SubscribedServices.FirstOrDefault();
+            if (firstUUID is not null)
+            {
+                advertisement.ServiceUUIDs = [firstUUID];
+            }
 
             await mgr.CreateAdvertisement(advertisement);
             Console.WriteLine("✅ Bluetooth advertisement started successfully");
@@ -249,11 +293,25 @@ public class GattController(Identifier id) : PawsController(id), IPawsAfterIniti
         return string.Join(",", identifiers);
     }
 
-    private static GattServiceDescription RootService = new GattServiceDescription()
+    private static readonly GattServiceDescription RootService = new()
     {
         UUID = UuidRegistry.RootService.ToString(),
         Primary = true
     };
+
+    private static readonly IEnumerable<Type> RootCharacteristics =
+    [
+        typeof(SceneListCharacteristic),
+        typeof(ServiceListCharacteristic),
+        typeof(ControllerListCharacteristic),
+        typeof(InterfaceListCharacteristic),
+        typeof(SceneCharacteristic),
+        typeof(TimestampCharacteristic),
+        typeof(UptimeCharacteristic),
+        typeof(CpuTempCharacteristic),
+        typeof(CpuLoadCharacteristic),
+        typeof(NetworkCharacteristic)
+    ];
 
     public class SceneListCharacteristic(PawsRuntime runtime) : PawsServiceImplementations.PawsCharacteristic(
         runtime,
@@ -265,6 +323,30 @@ public class GattController(Identifier id) : PawsController(id), IPawsAfterIniti
             return Task.FromResult(EncodeFromString(StringFromIdentifiers(
                 Runtime.Scenes.GetAllIdentifiers()
             )));
+        }
+    }
+
+    public class ServiceListCharacteristic(PawsRuntime runtime) : PawsServiceImplementations.PawsCharacteristic(
+        runtime,
+        UuidRegistry.RootCharacteristics.ServiceList,
+        CharacteristicFlags.Read)
+    {
+        public override Task<byte[]> ReadValueAsync()
+        {
+            return Task.FromResult(EncodeFromString(
+                string.Join(",",
+                    Runtime.Scenes.GetAll()
+                        .Select(kvp =>
+                        {
+                            if (kvp.Value is IGattControllableDefinition gattControllable)
+                            {
+                                return gattControllable.ServiceDescription.UUID;
+                            }
+
+                            return null;
+                        })
+                    )
+            ));
         }
     }
 
@@ -333,9 +415,9 @@ public class GattController(Identifier id) : PawsController(id), IPawsAfterIniti
             {
                 string raw = await File.ReadAllTextAsync(path);
                 raw = raw.Split(" ").FirstOrDefault() ?? "";
-                if (int.TryParse(raw.Trim(), out int milliDegrees))
+                if (double.TryParse(raw.Trim(), out double milliDegrees))
                 {
-                    return EncodeFromInt(milliDegrees);
+                    return EncodeFromDouble(milliDegrees);
                 }
                 else
                 {
@@ -361,9 +443,9 @@ public class GattController(Identifier id) : PawsController(id), IPawsAfterIniti
             if (File.Exists(path))
             {
                 string raw = await File.ReadAllTextAsync(path);
-                if (int.TryParse(raw.Trim(), out int milliDegrees))
+                if (double.TryParse(raw.Trim(), out double milliDegrees))
                 {
-                    return EncodeFromInt(milliDegrees);
+                    return EncodeFromDouble(milliDegrees);
                 }
                 else
                 {
@@ -390,9 +472,9 @@ public class GattController(Identifier id) : PawsController(id), IPawsAfterIniti
             {
                 string raw = await File.ReadAllTextAsync(path);
                 raw = raw.Split(" ").FirstOrDefault() ?? "";
-                if (int.TryParse(raw.Trim(), out int milliDegrees))
+                if (double.TryParse(raw.Trim(), out double milliDegrees))
                 {
-                    return EncodeFromInt(milliDegrees);
+                    return EncodeFromDouble(milliDegrees);
                 }
                 else
                 {
@@ -453,22 +535,6 @@ public class GattController(Identifier id) : PawsController(id), IPawsAfterIniti
                 return Array.Empty<byte>();
             }
         }
-    }
-
-    private GattServiceBuilder BuildRootService(PawsRuntime runtime)
-    {
-        //TODO use register service instead
-        var service = AppBuilder.AddService(RootService);
-        service.WithCharacteristic(new SceneListCharacteristic(runtime), []);
-        service.WithCharacteristic(new ControllerListCharacteristic(runtime), []);
-        service.WithCharacteristic(new InterfaceListCharacteristic(runtime), []);
-        service.WithCharacteristic(new SceneCharacteristic(runtime), []);
-        service.WithCharacteristic(new TimestampCharacteristic(), []);
-        service.WithCharacteristic(new UptimeCharacteristic(), []);
-        service.WithCharacteristic(new CpuTempCharacteristic(), []);
-        service.WithCharacteristic(new CpuLoadCharacteristic(), []);
-        service.WithCharacteristic(new UptimeCharacteristic(), []);
-        return service;
     }
 
     #endregion
