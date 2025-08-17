@@ -1,108 +1,35 @@
-using System.Reflection;
 using DotnetBleServer.Advertisements;
 using DotnetBleServer.Core;
 using DotnetBleServer.Gatt;
 using DotnetBleServer.Gatt.BlueZModel;
 using DotnetBleServer.Gatt.Description;
 using PAWSC.Runtime;
-using PAWSC.Scenes;
 
 namespace PAWSC.Controllers.Implementations.Gatt;
 
-public class GattController(Identifier id) : PawsController(id), IPawsAfterInitialisableHook, IDisposable
+public class GattController(Identifier id, string localName = "ToshiProto") : PawsController(id), IDisposable
 {
-    public bool IsRegistered { get; private set; } = false;
-    private GattApplicationBuilder AppBuilder { get; } = new GattApplicationBuilder();
-    private HashSet<string> SubscribedServices { get; } = new HashSet<string>();
-
     /**
      * Only exists after AfterInit is successful (app is running)
      */
-    private ServerContext? ServerContext { get; set; } = null;
+    private ServerContext? ServerContext { get; set; }
 
-    protected LEAdvertisement1Properties Advertisement { get; } = new LEAdvertisement1Properties
+    private LEAdvertisement1Properties Advertisement { get; } = new()
     {
         Type = "peripheral",
-        ServiceUUIDs = new[] { UuidRegistry.AdvertisementService.ToString() },
-        LocalName = "ToshiProto",
-        Appearance = (ushort)0x0080,
+        ServiceUUIDs = [UuidRegistry.PawsBaseService.ToString()],
+        LocalName = localName,
+        Appearance = 0x0080,
         Discoverable = true,
         IncludeTxPower = true
     };
 
-    private void RegisterService(IGattControllableDefinition definition)
-    {
-        RegisterService(definition.ServiceDescription, definition.Characteristics);
-    }
-
-    private void RegisterService(PawsRuntime runtime,
-        GattServiceDescription serviceDescription,
-        IEnumerable<Type> characteristics)
-    {
-        var instances = new List<GattCharacteristicDescription>();
-
-        foreach (var type in characteristics)
-        {
-            if (!type.IsClass)
-                throw new ArgumentException($"{type.Name} is not a class type");
-
-            var intCtor = type.GetConstructor([typeof(PawsRuntime)]);
-            GattCharacteristicDescription? instance = null;
-            if (intCtor != null)
-            {
-                instance = Activator.CreateInstance(type, runtime) as GattCharacteristicDescription;
-            }
-            else
-            {
-                instance = Activator.CreateInstance(type) as GattCharacteristicDescription;
-            }
-
-            if (instance == null)
-                throw new MissingMemberException($"{type.Name} - could not activate instance with either () or (runtime)");
-
-            instances.Add(instance);
-        }
-
-        RegisterService(serviceDescription, instances);
-    }
-
-    private void RegisterService(GattServiceDescription serviceDescription,
-        IEnumerable<GattCharacteristicDescription> characteristics)
-    {
-        if (IsRegistered)
-            throw new InvalidOperationException("Gatt Controller is already registered");
-
-        if (!SubscribedServices.Add(serviceDescription.UUID))
-        {
-            Console.WriteLine(serviceDescription.UUID + " : Gatt Service already registered, skipping...");
-            return;
-        }
-
-        var builder = AppBuilder.AddService(serviceDescription);
-        foreach (var characteristic in characteristics)
-        {
-            var nameCharacteristic = new GattDescriptorDescription
-            {
-                UUID = UuidRegistry.CharacteristicUserDescription.ToString(),
-                Value = Encoding.UTF8.GetBytes(characteristic.GetType().Name),
-                Flags = ["read"]
-            };
-            builder.WithCharacteristic(characteristic, [nameCharacteristic]);
-        }
-    }
-
-    public override Task Initialise(PawsRuntime runtime)
-    {
-        base.Initialise(runtime);
-        return Task.CompletedTask;
-    }
-
-    public async Task AfterInitialise(PawsRuntime runtime)
+    public override async Task Initialise(PawsRuntime runtime)
     {
         try
         {
-            await ScanForServices(runtime);
-            await StartGattServer();
+            var builder = BuildServices(runtime);
+            await StartGattServer(builder);
             Console.WriteLine("GATT server started successfully");
         }
         catch (Tmds.DBus.DBusException ex) when (ex.ErrorName?.Contains("org.bluez.Error.Failed") == true)
@@ -125,40 +52,16 @@ public class GattController(Identifier id) : PawsController(id), IPawsAfterIniti
         }
     }
 
-    private Task ScanForServices(PawsRuntime runtime)
+    private static GattApplicationBuilder BuildServices(PawsRuntime runtime)
     {
-        try
-        {
-            var gattServices = runtime.Scenes.ValuesOfType<IGattControllableDefinition>().ToList();
-
-            Console.WriteLine("Registering Root Service");
-            RegisterService(runtime,
-                RootService,
-                RootCharacteristics);
-
-            if (gattServices.Count == 0)
-            {
-                Console.WriteLine("ℹ️  No GATT controllable scenes found.");
-                return Task.CompletedTask;
-            }
-
-            Console.WriteLine($"🔍 Found {gattServices.Count} GATT controllable scenes");
-            foreach (var gattControllableDefinition in gattServices)
-            {
-                RegisterService(gattControllableDefinition);
-                Console.WriteLine($"✅ Registered GATT service for: {gattControllableDefinition.GetType().Name}");
-            }
-
-            return Task.CompletedTask;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"⚠️  Error scanning for GATT services: {ex.Message}");
-            return Task.CompletedTask;
-        }
+        var appBuilder = new GattApplicationBuilder();
+        appBuilder.AddService(new PawsBaseServiceImplementation(runtime).Instance);
+        appBuilder.AddService(new PawsSceneInteractionService(runtime).Instance);
+        appBuilder.AddService(new PawsDeviceInfoService().Instance);
+        return appBuilder;
     }
 
-    private async Task<bool> IsBluetoothAvailableAsync()
+    private static async Task<bool> IsBluetoothAvailableAsync()
     {
         try
         {
@@ -183,7 +86,7 @@ public class GattController(Identifier id) : PawsController(id), IPawsAfterIniti
         }
     }
 
-    private async Task StartGattServer()
+    private async Task StartGattServer(GattApplicationBuilder builder)
     {
         if (!await IsBluetoothAvailableAsync())
         {
@@ -204,7 +107,7 @@ public class GattController(Identifier id) : PawsController(id), IPawsAfterIniti
 
             if (!await ServerContext.Adapter.GetPoweredAsync())
             {
-                throw new Exception("Could not power adapter.");
+                throw new InvalidOperationException("Could not power adapter.");
             }
 
             var adapterAddress = await ServerContext.Adapter.GetAddressAsync();
@@ -216,10 +119,9 @@ public class GattController(Identifier id) : PawsController(id), IPawsAfterIniti
             // Register the GATT application
             Console.WriteLine("📝 Registering GATT application...");
             var gattManager = new GattApplicationManager(ServerContext);
-            await gattManager.RegisterGattApplication(AppBuilder.BuildServiceDescriptions());
+            await gattManager.RegisterGattApplication(builder.BuildServiceDescriptions());
 
             AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
-            IsRegistered = true;
 
             Console.WriteLine("✅ GATT server started successfully with basic service");
         }
@@ -239,22 +141,7 @@ public class GattController(Identifier id) : PawsController(id), IPawsAfterIniti
         {
             var mgr = new AdvertisingManager(serverContext);
 
-            // Create a proper advertisement with the service UUID
-            var advertisement = new LEAdvertisement1Properties
-            {
-                Type = "peripheral",
-                LocalName = "PAWSC-Controller",
-                Appearance = 0x0080, // Generic HID
-                Discoverable = true,
-                IncludeTxPower = true
-            };
-            var firstUUID = SubscribedServices.FirstOrDefault();
-            if (firstUUID is not null)
-            {
-                advertisement.ServiceUUIDs = [firstUUID];
-            }
-
-            await mgr.CreateAdvertisement(advertisement);
+            await mgr.CreateAdvertisement(Advertisement);
             Console.WriteLine("✅ Bluetooth advertisement started successfully");
         }
         catch (Exception ex)
@@ -269,7 +156,7 @@ public class GattController(Identifier id) : PawsController(id), IPawsAfterIniti
         ServerContext?.Adapter.SetPoweredAsync(false).Wait();
     }
 
-    private void ReleaseUnmanagedResources()
+    protected virtual void Dispose(bool disposing)
     {
         ServerContext?.Dispose();
         AppDomain.CurrentDomain.ProcessExit -= OnProcessExit;
@@ -277,267 +164,12 @@ public class GattController(Identifier id) : PawsController(id), IPawsAfterIniti
 
     public void Dispose()
     {
-        ReleaseUnmanagedResources();
+        Dispose(true);
         GC.SuppressFinalize(this);
     }
 
     ~GattController()
     {
-        ReleaseUnmanagedResources();
+        Dispose(false);
     }
-
-    #region Root Service & Characteristics
-
-    private static string StringFromIdentifiers(IEnumerable<Identifier> identifiers)
-    {
-        return string.Join(",", identifiers);
-    }
-
-    private static readonly GattServiceDescription RootService = new()
-    {
-        UUID = UuidRegistry.RootService.ToString(),
-        Primary = true
-    };
-
-    private static readonly IEnumerable<Type> RootCharacteristics =
-    [
-        typeof(SceneListCharacteristic),
-        typeof(ServiceListCharacteristic),
-        typeof(ControllerListCharacteristic),
-        typeof(InterfaceListCharacteristic),
-        typeof(SceneCharacteristic),
-        typeof(TimestampCharacteristic),
-        typeof(UptimeCharacteristic),
-        typeof(CpuTempCharacteristic),
-        typeof(CpuLoadCharacteristic),
-        typeof(NetworkCharacteristic)
-    ];
-
-    public class SceneListCharacteristic(PawsRuntime runtime) : PawsServiceImplementations.PawsCharacteristic(
-        runtime,
-        UuidRegistry.RootCharacteristics.SceneList,
-        CharacteristicFlags.Read)
-    {
-        public override Task<byte[]> ReadValueAsync()
-        {
-            return Task.FromResult(EncodeFromString(StringFromIdentifiers(
-                Runtime.Scenes.GetAllIdentifiers()
-            )));
-        }
-    }
-
-    public class ServiceListCharacteristic(PawsRuntime runtime) : PawsServiceImplementations.PawsCharacteristic(
-        runtime,
-        UuidRegistry.RootCharacteristics.ServiceList,
-        CharacteristicFlags.Read)
-    {
-        public override Task<byte[]> ReadValueAsync()
-        {
-            return Task.FromResult(EncodeFromString(
-                string.Join(",",
-                    Runtime.Scenes.GetAll()
-                        .Select(kvp =>
-                        {
-                            if (kvp.Value is IGattControllableDefinition gattControllable)
-                            {
-                                return gattControllable.ServiceDescription.UUID;
-                            }
-
-                            return null;
-                        })
-                    )
-            ));
-        }
-    }
-
-    public class ControllerListCharacteristic(PawsRuntime runtime) : PawsServiceImplementations.PawsCharacteristic(
-        runtime,
-        UuidRegistry.RootCharacteristics.ControllerList,
-        CharacteristicFlags.Read)
-    {
-        public override Task<byte[]> ReadValueAsync()
-        {
-            return Task.FromResult(EncodeFromString(StringFromIdentifiers(
-                Runtime.Controllers.GetAllIdentifiers()
-            )));
-        }
-    }
-
-    public class InterfaceListCharacteristic(PawsRuntime runtime) : PawsServiceImplementations.PawsCharacteristic(
-        runtime,
-        UuidRegistry.RootCharacteristics.InterfaceList,
-        CharacteristicFlags.Read)
-    {
-        public override Task<byte[]> ReadValueAsync()
-        {
-            return Task.FromResult(EncodeFromString(StringFromIdentifiers(
-                Runtime.Interfaces.GetAllIdentifiers()
-            )));
-        }
-    }
-
-    public class SceneCharacteristic(PawsRuntime runtime) : PawsServiceImplementations.PawsCharacteristic(
-        runtime,
-        UuidRegistry.RootCharacteristics.ActiveScene,
-        CharacteristicFlags.Notify)
-    {
-        public override Task<byte[]> ReadValueAsync()
-        {
-            return Task.FromResult(EncodeFromString(Runtime.ActiveScene?.Id.ToString() ?? ""));
-        }
-
-        public override Task WriteValueAsync(byte[] value)
-        {
-            Runtime.Broadcast(new PawsCommands.SetScene(new Identifier(DecodeToString(value))));
-            return Task.CompletedTask;
-        }
-    }
-
-    public class TimestampCharacteristic() : PawsGattCharacteristic(
-        UuidRegistry.RootCharacteristics.Timestamp,
-        CharacteristicFlags.Read)
-    {
-        public override Task<byte[]> ReadValueAsync()
-        {
-            return Task.FromResult(EncodeFromString(DateTime.Now.ToShortDateString()));
-        }
-    }
-
-    public class UptimeCharacteristic() : PawsGattCharacteristic(
-        UuidRegistry.RootCharacteristics.Uptime,
-        CharacteristicFlags.Read)
-    {
-        public override async Task<byte[]> ReadValueAsync()
-        {
-            string path = "/proc/uptime";
-
-            if (File.Exists(path))
-            {
-                string raw = await File.ReadAllTextAsync(path);
-                raw = raw.Split(" ").FirstOrDefault() ?? "";
-                if (double.TryParse(raw.Trim(), out double milliDegrees))
-                {
-                    return EncodeFromDouble(milliDegrees);
-                }
-                else
-                {
-                    Console.WriteLine("Could not parse uptime : " + raw);
-                }
-            }
-            else
-            {
-                Console.WriteLine("Uptime file not found.");
-            }
-            return [];
-        }
-    }
-
-    public class CpuTempCharacteristic() : PawsGattCharacteristic(
-        UuidRegistry.RootCharacteristics.CpuTemp,
-        CharacteristicFlags.Read)
-    {
-        public override async Task<byte[]> ReadValueAsync()
-        {
-            string path = "/sys/class/thermal/thermal_zone0/temp";
-
-            if (File.Exists(path))
-            {
-                string raw = await File.ReadAllTextAsync(path);
-                if (double.TryParse(raw.Trim(), out double milliDegrees))
-                {
-                    return EncodeFromDouble(milliDegrees);
-                }
-                else
-                {
-                    Console.WriteLine("Could not parse temperature : " + raw);
-                }
-            }
-            else
-            {
-                Console.WriteLine("Temperature file not found.");
-            }
-            return [];
-        }
-    }
-
-    public class CpuLoadCharacteristic() : PawsGattCharacteristic(
-        UuidRegistry.RootCharacteristics.CpuLoad,
-        CharacteristicFlags.Read)
-    {
-        public override async Task<byte[]> ReadValueAsync()
-        {
-            string path = "/proc/loadavg";
-
-            if (File.Exists(path))
-            {
-                string raw = await File.ReadAllTextAsync(path);
-                raw = raw.Split(" ").FirstOrDefault() ?? "";
-                if (double.TryParse(raw.Trim(), out double milliDegrees))
-                {
-                    return EncodeFromDouble(milliDegrees);
-                }
-                else
-                {
-                    Console.WriteLine("Could not parse cpu load : " + raw);
-                }
-            }
-            else
-            {
-                Console.WriteLine("Cpu load file not found.");
-            }
-            return [];
-        }
-    }
-
-    public class NetworkCharacteristic() : PawsGattCharacteristic(
-        UuidRegistry.RootCharacteristics.Network,
-        CharacteristicFlags.Read)
-    {
-        public override async Task<byte[]> ReadValueAsync()
-        {
-            string path = "/proc/net/dev";
-
-            if (!File.Exists(path))
-            {
-                Console.WriteLine("Network stats file not found.");
-                return Array.Empty<byte>();
-            }
-
-            try
-            {
-                var lines = await File.ReadAllLinesAsync(path);
-                // Skip first two lines (headers)
-                var stats = lines.Skip(2)
-                    .Select(line =>
-                    {
-                        var parts = line.Split(':');
-                        if (parts.Length != 2) return null;
-
-                        string iface = parts[0].Trim();
-                        var values = parts[1].Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-                        if (values.Length < 16) return null;
-
-                        // Receive bytes and transmit bytes
-                        ulong rxBytes = ulong.Parse(values[0]);
-                        ulong txBytes = ulong.Parse(values[8]);
-
-                        return $"{iface}: RX={rxBytes} TX={txBytes}";
-                    })
-                    .Where(s => s != null);
-
-                string result = string.Join("\n", stats);
-                return EncodeFromString(result);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Failed to read network stats: " + ex.Message);
-                return Array.Empty<byte>();
-            }
-        }
-    }
-
-    #endregion
-
-
 }

@@ -5,9 +5,6 @@ namespace PAWSC.Scenes.Implementations.Games;
 
 public class DinoGame(Identifier id) : GameScene(id)
     {
-        #pragma warning disable CS0169 // Field is never used - will be used for controller input
-        private GameControllerCharacteristic? _controller;
-        #pragma warning restore CS0169
 
         // Display / world
         private float groundY;
@@ -45,10 +42,10 @@ public class DinoGame(Identifier id) : GameScene(id)
             return Task.CompletedTask;
         }
 
-        protected override void OnInput(object? sender, GameControllerCharacteristic.ControllerValues e)
+        protected override Task OnInput(ControllerValues e)
         {
-            if (e == GameControllerCharacteristic.ControllerValues.A ||
-                e == GameControllerCharacteristic.ControllerValues.Up)
+            if (e == ControllerValues.A ||
+                e == ControllerValues.Up)
             {
                 if (!isJumping)
                 {
@@ -57,6 +54,7 @@ public class DinoGame(Identifier id) : GameScene(id)
                 }
             }
             // optionally implement Down / B for ducking
+            return Task.CompletedTask;
         }
 
         protected override void RenderScene(DrawInfo drawInfo)
@@ -242,7 +240,7 @@ public class DinoGame(Identifier id) : GameScene(id)
             frameTimer = 0;
             runFrame = 0;
         }
-        
+
         private class Obstacle
         {
             public float X;

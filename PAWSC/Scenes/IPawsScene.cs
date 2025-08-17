@@ -14,7 +14,7 @@ public record DrawInfo
 {
     public DateTime Time { get; init; }
     public long Deltatime { get; init; }
-    
+
     public long Fps => 10000000 / Deltatime;
 }
 
@@ -25,8 +25,7 @@ public abstract class BaseScene(Identifier identifier) : IPawsScene
     public abstract Task Initialise(PawsRuntime runtime);
 }
 
-public interface IGattControllableDefinition
+public interface IGattCapableScene
 {
-    public abstract GattServiceDescription ServiceDescription { get; }
-    public abstract IEnumerable<GattCharacteristicDescription> Characteristics { get; }
+    public IEnumerable<string> GetCapabilities();
 }

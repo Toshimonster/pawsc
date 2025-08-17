@@ -32,6 +32,11 @@ public readonly struct Identifier : IEquatable<Identifier>
         return new Identifier(RandomNumberGenerator.GetString("abcdefghijklmnopqrstuvwxyz1234567890", 5));
     }
 
+    public bool Matches(string identifier)
+    {
+        return identifier.Equals(ToString());
+    }
+
     /// <summary>
     /// Returns a string representation of the identifier.
     /// </summary>

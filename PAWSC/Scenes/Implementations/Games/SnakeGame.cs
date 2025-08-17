@@ -8,21 +8,21 @@ public class SnakeGame(Identifier id) : GameScene(id)
     // Game state
     private bool gameOver = false;
     private int score = 0;
-    
+
     // Snake
     private readonly List<SKPoint> snake = new();
     private SKPoint direction = new(1, 0); // Start moving right
     private const int SnakeSegmentSize = 2;
-    
+
     // Food
     private SKPoint food;
     private readonly Random rng = new();
-    
+
     // Game timing
     private DateTime lastUpdate = DateTime.UtcNow;
     private const double MoveInterval = 0.15; // Move every 150ms
     private double moveTimer = 0.0;
-    
+
     // Grid size
     private const int GridWidth = 32; // 64 pixels / 2 pixel segments
     private const int GridHeight = 16; // 32 pixels / 2 pixel segments
@@ -35,32 +35,35 @@ public class SnakeGame(Identifier id) : GameScene(id)
         return Task.CompletedTask;
     }
 
-    protected override void OnInput(object? sender, GameControllerCharacteristic.ControllerValues e)
+    protected override Task OnInput(ControllerValues e)
     {
         if (gameOver)
         {
-            if (e == GameControllerCharacteristic.ControllerValues.A)
+            if (e == ControllerValues.A)
             {
                 ResetGame();
             }
-            return;
+
+            return Task.CompletedTask;
         }
 
         switch (e)
         {
-            case GameControllerCharacteristic.ControllerValues.Up:
+            case ControllerValues.Up:
                 if (direction.Y == 0) direction = new SKPoint(0, -1);
                 break;
-            case GameControllerCharacteristic.ControllerValues.Down:
+            case ControllerValues.Down:
                 if (direction.Y == 0) direction = new SKPoint(0, 1);
                 break;
-            case GameControllerCharacteristic.ControllerValues.Left:
+            case ControllerValues.Left:
                 if (direction.X == 0) direction = new SKPoint(-1, 0);
                 break;
-            case GameControllerCharacteristic.ControllerValues.Right:
+            case ControllerValues.Right:
                 if (direction.X == 0) direction = new SKPoint(1, 0);
                 break;
         }
+
+        return Task.CompletedTask;
     }
 
     protected override void RenderScene(DrawInfo drawInfo)
@@ -124,7 +127,7 @@ public class SnakeGame(Identifier id) : GameScene(id)
     {
         moveTimer += elapsed;
         if (moveTimer < MoveInterval) return;
-        
+
         moveTimer = 0.0;
         MoveSnake();
         CheckCollisions();
@@ -135,15 +138,15 @@ public class SnakeGame(Identifier id) : GameScene(id)
     {
         var head = snake[0];
         var newHead = new SKPoint(head.X + direction.X, head.Y + direction.Y);
-        
+
         // Wrap around edges
         if (newHead.X < 0) newHead.X = GridWidth - 1;
         if (newHead.X >= GridWidth) newHead.X = 0;
         if (newHead.Y < 0) newHead.Y = GridHeight - 1;
         if (newHead.Y >= GridHeight) newHead.Y = 0;
-        
+
         snake.Insert(0, newHead);
-        
+
         // Remove tail (will be added back if food eaten)
         snake.RemoveAt(snake.Count - 1);
     }
@@ -151,7 +154,7 @@ public class SnakeGame(Identifier id) : GameScene(id)
     private void CheckCollisions()
     {
         var head = snake[0];
-        
+
         // Check self-collision (skip head)
         for (int i = 1; i < snake.Count; i++)
         {
@@ -171,7 +174,7 @@ public class SnakeGame(Identifier id) : GameScene(id)
             // Grow snake
             var tail = snake[^1];
             snake.Add(tail);
-            
+
             // Spawn new food
             SpawnFood();
             score++;
@@ -191,14 +194,14 @@ public class SnakeGame(Identifier id) : GameScene(id)
         gameOver = false;
         score = 0;
         snake.Clear();
-        
+
         // Start with 3 segments moving right
         snake.Add(new SKPoint(5, 8));
         snake.Add(new SKPoint(4, 8));
         snake.Add(new SKPoint(3, 8));
-        
+
         direction = new SKPoint(1, 0);
         SpawnFood();
         moveTimer = 0.0;
     }
-} 
+}

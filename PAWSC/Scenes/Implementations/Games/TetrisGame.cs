@@ -10,24 +10,24 @@ public class TetrisGame(Identifier id) : GameScene(id)
     private int score = 0;
     private int level = 1;
     private int linesCleared = 0;
-    
+
     // Grid
     private const int GridWidth = 16; // 64 pixels / 4 pixel blocks
     private const int GridHeight = 8; // 32 pixels / 4 pixel blocks
     private readonly int[,] grid = new int[GridWidth, GridHeight];
     private const int BlockSize = 4; // 4x4 pixel blocks
-    
+
     // Current piece
     private int currentPieceX = 0;
     private int currentPieceY = 0;
     private int currentPieceType = 0;
     private int currentPieceRotation = 0;
-    
+
     // Game timing
     private DateTime lastUpdate = DateTime.UtcNow;
     private double dropTimer = 0.0;
     private double dropInterval = 1.0; // Start with 1 second drops
-    
+
     // Piece definitions (simple 2x2 blocks for small screen)
     private static readonly int[][][] Pieces = {
         // Square
@@ -48,37 +48,38 @@ public class TetrisGame(Identifier id) : GameScene(id)
         return Task.CompletedTask;
     }
 
-    protected override void OnInput(object? sender, GameControllerCharacteristic.ControllerValues e)
+    protected override Task OnInput(ControllerValues e)
     {
         if (gameOver)
         {
-            if (e == GameControllerCharacteristic.ControllerValues.A)
+            if (e == ControllerValues.A)
             {
                 ResetGame();
             }
-            return;
+
+            return Task.CompletedTask;
         }
 
         switch (e)
         {
-            case GameControllerCharacteristic.ControllerValues.Left:
+            case ControllerValues.Left:
                 if (CanMovePiece(currentPieceX - 1, currentPieceY, currentPieceType, currentPieceRotation))
                     currentPieceX--;
                 break;
-            case GameControllerCharacteristic.ControllerValues.Right:
+            case ControllerValues.Right:
                 if (CanMovePiece(currentPieceX + 1, currentPieceY, currentPieceType, currentPieceRotation))
                     currentPieceX++;
                 break;
-            case GameControllerCharacteristic.ControllerValues.Down:
+            case ControllerValues.Down:
                 if (CanMovePiece(currentPieceX, currentPieceY + 1, currentPieceType, currentPieceRotation))
                     currentPieceY++;
                 break;
-            case GameControllerCharacteristic.ControllerValues.Up:
+            case ControllerValues.Up:
                 var newRotation = (currentPieceRotation + 1) % 4;
                 if (CanMovePiece(currentPieceX, currentPieceY, currentPieceType, newRotation))
                     currentPieceRotation = newRotation;
                 break;
-            case GameControllerCharacteristic.ControllerValues.A:
+            case ControllerValues.A:
                 // Hard drop
                 while (CanMovePiece(currentPieceX, currentPieceY + 1, currentPieceType, currentPieceRotation))
                 {
@@ -87,6 +88,8 @@ public class TetrisGame(Identifier id) : GameScene(id)
                 PlacePiece();
                 break;
         }
+
+        return Task.CompletedTask;
     }
 
     protected override void RenderScene(DrawInfo drawInfo)
@@ -106,7 +109,7 @@ public class TetrisGame(Identifier id) : GameScene(id)
 
         // Draw grid
         DrawGrid();
-        
+
         // Draw current piece
         DrawPiece(currentPieceX, currentPieceY, currentPieceType, currentPieceRotation, SKColors.Cyan);
 
@@ -117,7 +120,7 @@ public class TetrisGame(Identifier id) : GameScene(id)
             Color = SKColors.White,
             IsAntialias = false
         };
-        
+
         Canvas.DrawText($"Score: {score}", 2, 6, SKTextAlign.Left, font, paint);
         Canvas.DrawText($"Level: {level}", 2, 12, SKTextAlign.Left, font, paint);
         Canvas.DrawText($"Lines: {linesCleared}", 2, 18, SKTextAlign.Left, font, paint);
@@ -228,10 +231,10 @@ public class TetrisGame(Identifier id) : GameScene(id)
                 {
                     var checkX = newX + px;
                     var checkY = newY + py;
-                    
+
                     if (checkX < 0 || checkX >= GridWidth || checkY >= GridHeight)
                         return false;
-                    
+
                     if (checkY >= 0 && grid[checkX, checkY] != 0)
                         return false;
                 }
@@ -302,11 +305,11 @@ public class TetrisGame(Identifier id) : GameScene(id)
 
                 linesCleared++;
                 score += 100 * level;
-                
+
                 // Increase level every 5 lines
                 level = (linesCleared / 5) + 1;
                 dropInterval = Math.Max(0.1, 1.0 - (level - 1) * 0.1);
-                
+
                 y++; // Recheck this line
             }
         }
@@ -328,7 +331,7 @@ public class TetrisGame(Identifier id) : GameScene(id)
         linesCleared = 0;
         dropInterval = 1.0;
         dropTimer = 0.0;
-        
+
         // Clear grid
         for (int x = 0; x < GridWidth; x++)
         {
@@ -337,7 +340,7 @@ public class TetrisGame(Identifier id) : GameScene(id)
                 grid[x, y] = 0;
             }
         }
-        
+
         SpawnNewPiece();
     }
-} 
+}

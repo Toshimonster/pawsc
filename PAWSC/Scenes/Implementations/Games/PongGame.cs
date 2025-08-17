@@ -38,33 +38,36 @@ public class PongGame(Identifier id) : GameScene(id)
         return Task.CompletedTask;
     }
 
-    protected override void OnInput(object? sender, GameControllerCharacteristic.ControllerValues e)
+    protected override Task OnInput(ControllerValues e)
     {
         if (gameOver)
         {
-            if (e == GameControllerCharacteristic.ControllerValues.A)
+            if (e == ControllerValues.A)
             {
                 ResetGame();
             }
-            return;
+
+            return Task.CompletedTask;
         }
 
-        if (!gameStarted && e == GameControllerCharacteristic.ControllerValues.A)
+        if (!gameStarted && e == ControllerValues.A)
         {
             gameStarted = true;
-            return;
+            return Task.CompletedTask;
         }
 
         // Paddle movement
         switch (e)
         {
-            case GameControllerCharacteristic.ControllerValues.Up:
+            case ControllerValues.Up:
                 playerPaddleY = Math.Max(0, playerPaddleY - PaddleHeight);
                 break;
-            case GameControllerCharacteristic.ControllerValues.Down:
+            case ControllerValues.Down:
                 playerPaddleY = Math.Min(SceneImageInfo.Height - PaddleHeight, playerPaddleY + PaddleHeight);
                 break;
         }
+
+        return Task.CompletedTask;
     }
 
     protected override void RenderScene(DrawInfo drawInfo)

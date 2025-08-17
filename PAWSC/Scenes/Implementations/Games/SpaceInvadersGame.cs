@@ -10,13 +10,13 @@ public class SpaceInvadersGame(Identifier id) : GameScene(id)
     private int score = 0;
     private int lives = 3;
     private bool gameStarted = false;
-    
+
     // Player
     private float playerX = 32;
     private const int PlayerWidth = 6;
     private const int PlayerHeight = 4;
     private const float PlayerSpeed = 40f;
-    
+
     // Aliens
     private readonly List<Alien> aliens = new();
     private const int AlienRows = 3;
@@ -27,14 +27,14 @@ public class SpaceInvadersGame(Identifier id) : GameScene(id)
     private float alienSpeed = 10f;
     private double alienMoveTimer = 0.0;
     private const double AlienMoveInterval = 1.0;
-    
+
     // Bullets
     private readonly List<Bullet> playerBullets = new();
     private readonly List<Bullet> alienBullets = new();
     private const int BulletWidth = 2;
     private const int BulletHeight = 4;
     private const float BulletSpeed = 60f;
-    
+
     // Game timing
     private DateTime lastUpdate = DateTime.UtcNow;
     private double shootTimer = 0.0;
@@ -50,32 +50,33 @@ public class SpaceInvadersGame(Identifier id) : GameScene(id)
         return Task.CompletedTask;
     }
 
-    protected override void OnInput(object? sender, GameControllerCharacteristic.ControllerValues e)
+    protected override Task OnInput(ControllerValues e)
     {
         if (gameOver)
         {
-            if (e == GameControllerCharacteristic.ControllerValues.A)
+            if (e == ControllerValues.A)
             {
                 ResetGame();
             }
-            return;
+
+            return Task.CompletedTask;
         }
 
-        if (!gameStarted && e == GameControllerCharacteristic.ControllerValues.A)
+        if (!gameStarted && e == ControllerValues.A)
         {
             gameStarted = true;
-            return;
+            return Task.CompletedTask;
         }
 
         switch (e)
         {
-            case GameControllerCharacteristic.ControllerValues.Left:
+            case ControllerValues.Left:
                 playerX = Math.Max(0, playerX - PlayerWidth);
                 break;
-            case GameControllerCharacteristic.ControllerValues.Right:
+            case ControllerValues.Right:
                 playerX = Math.Min(SceneImageInfo.Width - PlayerWidth, playerX + PlayerWidth);
                 break;
-            case GameControllerCharacteristic.ControllerValues.A:
+            case ControllerValues.A:
                 if (shootTimer <= 0.0)
                 {
                     ShootPlayerBullet();
@@ -83,6 +84,8 @@ public class SpaceInvadersGame(Identifier id) : GameScene(id)
                 }
                 break;
         }
+
+        return Task.CompletedTask;
     }
 
     protected override void RenderScene(DrawInfo drawInfo)
@@ -107,7 +110,7 @@ public class SpaceInvadersGame(Identifier id) : GameScene(id)
             IsAntialias = false,
             Style = SKPaintStyle.Fill
         };
-        Canvas.DrawRect(new SKRect(playerX, SceneImageInfo.Height - PlayerHeight - 2, 
+        Canvas.DrawRect(new SKRect(playerX, SceneImageInfo.Height - PlayerHeight - 2,
                                   playerX + PlayerWidth, SceneImageInfo.Height - 2), playerPaint);
 
         // Draw aliens
@@ -145,7 +148,7 @@ public class SpaceInvadersGame(Identifier id) : GameScene(id)
             Color = SKColors.White,
             IsAntialias = false
         };
-        
+
         Canvas.DrawText($"Score: {score}", 2, 6, SKTextAlign.Left, font, paint);
         Canvas.DrawText($"Lives: {lives}", 2, 12, SKTextAlign.Left, font, paint);
 
@@ -362,10 +365,10 @@ public class SpaceInvadersGame(Identifier id) : GameScene(id)
         alienMoveTimer = 0.0;
         alienShootTimer = 0.0;
         shootTimer = 0.0;
-        
+
         playerBullets.Clear();
         alienBullets.Clear();
-        
+
         SpawnAliens();
     }
 
@@ -381,4 +384,4 @@ public class SpaceInvadersGame(Identifier id) : GameScene(id)
         public float Y { get; set; }
         public float VelocityY { get; set; }
     }
-} 
+}

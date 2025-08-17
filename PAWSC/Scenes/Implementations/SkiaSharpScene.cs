@@ -60,7 +60,7 @@ public abstract class SkiaSharpScene : SkiaSharpRasterScene
     }
 }
 
-public abstract class SkiaSharpRasterScene(Identifier identifier) : BaseScene(identifier)
+public abstract class SkiaSharpRasterScene(Identifier identifier) : GattCapableScene(identifier)
 {
     public static SKImage? ScaleImage(SKImage image, PawsInterfaceInfo ifaceInterfaceInfo)
     {

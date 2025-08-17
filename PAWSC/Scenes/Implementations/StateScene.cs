@@ -52,9 +52,9 @@ public class BaseState(Identifier id) : IPawsState
     }
 }
 
-public class StateScene : SkiaSharpRasterScene, IGattControllableDefinition
+public class StateScene : SkiaSharpRasterScene
 {
-    protected Dictionary<Identifier, IPawsState> States = new();
+    protected readonly Dictionary<Identifier, IPawsState> States = new();
 
     public StateScene(Identifier id, Dictionary<Identifier, IPawsState> definitions): this(id)
     {
@@ -101,47 +101,34 @@ public class StateScene : SkiaSharpRasterScene, IGattControllableDefinition
 
     private Identifier? _activeState = null;
 
-    private IPawsState? ActiveStateObject
-    {
-        get
-        {
-            if (ActiveState != null)
-            {
-                return States.GetValueOrDefault((Identifier) ActiveState);
-            }
-
-            return null;
-        }
-    }
+    private IPawsState? ActiveStateObject => ActiveState != null ? States.GetValueOrDefault((Identifier) ActiveState) : null;
 
     public override void Draw(PawsInterfaceManager mgr, DrawInfo drawInfo)
     {
-        IPawsState? stateToDraw = ActiveStateObject;
+        var stateToDraw = ActiveStateObject;
         if (stateToDraw == null) return;
 
-        foreach (KeyValuePair<Identifier[], IPawsGif> keyValuePair in stateToDraw.Definition)
+        foreach (var keyValuePair in stateToDraw.Definition)
         {
-            IEnumerable<IPawsInterface> ifaces = mgr.ById(keyValuePair.Key);
+            var ifaces = mgr.ById(keyValuePair.Key);
             DrawToInterface(ifaces, keyValuePair.Value, drawInfo);
         }
     }
 
     public override Task Initialise(PawsRuntime runtime)
     {
-        Characteristics =
-        [
-            new PawsStatesCharacteristic(runtime),
-            new PawsActiveStateCharacteristic(runtime)
-        ];
+        RegisterControl<Identifier>("setState", OnSetState);
+        RegisterControl("getState", OnGetState);
+        RegisterControl("getStateList", OnGetStateList);
 
         return Task.CompletedTask;
     }
 
     private void DrawToInterface(IEnumerable<IPawsInterface> ifaces, IPawsGif gif, DrawInfo drawInfo)
     {
-        SKCodec codec = gif.Codec;
-        SKCodecFrameInfo[] frames = codec.FrameInfo;
-        int frameIndex = GetFrameIndex(drawInfo.Time.Ticks / 10000, frames);
+        var codec = gif.Codec;
+        var frames = codec.FrameInfo;
+        var frameIndex = GetFrameIndex(drawInfo.Time.Ticks / 10000, frames);
 
         var info = codec.Info;
         using var bitmap = new SKBitmap(info.Width, info.Height);
@@ -159,11 +146,11 @@ public class StateScene : SkiaSharpRasterScene, IGattControllableDefinition
         }
     }
 
-    private int GetFrameIndex(long timeMs, SKCodecFrameInfo[] frames)
+    private static int GetFrameIndex(long timeMs, SKCodecFrameInfo[] frames)
     {
         long totalDuration = frames.Sum(f => f.Duration);
         if (totalDuration == 0) throw new ArgumentException("Frames cannot have a 0 duration");
-        long time = (timeMs) % (totalDuration);
+        var time = (timeMs) % (totalDuration);
 
         long accumulated = 0;
         for (int i = 0; i < frames.Length; i++)
@@ -188,50 +175,19 @@ public class StateScene : SkiaSharpRasterScene, IGattControllableDefinition
         }
     }
 
-    public GattServiceDescription ServiceDescription { get; } = new GattServiceDescription
+    private Task OnSetState(Identifier identifier)
     {
-        UUID = UuidRegistry.StateService.ToString(),
-        Primary = true
-    };
-
-    public IEnumerable<GattCharacteristicDescription> Characteristics { get; private set; } = new List<GattCharacteristicDescription>();
-
-    public class PawsStatesCharacteristic(PawsRuntime runtime) : PawsServiceImplementations.PawsStateCharacteristic(
-        runtime,
-        UuidRegistry.PawsCharacteristics.States,
-        CharacteristicFlags.Read)
-    {
-        public override Task<byte[]> ReadValueAsync()
-        {
-            var states = ActiveStateScene?.GetAllStates().ToList() ?? [];
-            return Task.FromResult(
-                EncodeFromString(
-                    string.Join(',', states.Select(x => x.Id))
-                )
-            );
-        }
+        SetStateFromId(identifier);
+        return Task.CompletedTask;
     }
 
-    public class PawsActiveStateCharacteristic(PawsRuntime runtime)
-        : PawsServiceImplementations.PawsStateCharacteristic(runtime, UuidRegistry.PawsCharacteristics.State,
-            CharacteristicFlags.Notify)
+    private Task<Identifier?> OnGetState()
     {
+        return Task.FromResult(ActiveState);
+    }
 
-        public override Task<byte[]> ReadValueAsync()
-        {
-            var activeState = ActiveStateScene?.ActiveState;
-            return Task.FromResult(
-                EncodeFromString(activeState?.ToString() ?? "")
-            );
-        }
-
-        public override Task WriteValueAsync(byte[]? value)
-        {
-            var stringId = DecodeToString(value);
-            var identifier = new Identifier(stringId);
-            Console.WriteLine(identifier);
-            ActiveStateScene?.SetStateFromId(identifier);
-            return base.WriteValueAsync(value);
-        }
+    private Task<string> OnGetStateList()
+    {
+        return Task.FromResult(string.Join(",", States.Keys));
     }
 }
