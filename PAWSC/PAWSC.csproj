@@ -8,7 +8,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="BluetoothLE.Server.Linux" Version="1.0.0" />
+      <!--<PackageReference Include="BluetoothLE.Server.Linux" Version="1.0.0" /> -->
+      <ProjectReference Include="../DotnetBleServer/DotnetBleServer.csproj" />
       <PackageReference Include="Iot.Device.Bindings" Version="4.0.1" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0-preview.7.25380.108" />
       <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0-preview.7.25380.108" />
@@ -19,7 +20,6 @@
 
       <!-- Explicit secure versions for transitive dependencies -->
     </ItemGroup>
-
     <!-- Package version constraints to prevent vulnerable versions -->
 
 </Project>

@@ -20,14 +20,25 @@ public record PawsGif(Identifier Id) : IPawsGif
 {
     public SKCodec Codec { get; private init; } = null!;
 
-    public static PawsGif FromFile(string path, Identifier id)
+    public static PawsGif FromCodec(SKCodec codec, Identifier id)
     {
-        var codec = SKCodec.Create(path);
-        if (codec is null) throw new FileNotFoundException(id + ": Could not create gif codec", path);
         return new PawsGif(id)
         {
             Codec = codec
         };
+    }
+
+    public static PawsGif FromBytes(byte[] bytes, Identifier id)
+    {
+        var codec = SKCodec.Create(SKData.CreateCopy(bytes));
+        return FromCodec(codec, id);
+    }
+
+    public static PawsGif FromFile(string path, Identifier id)
+    {
+        var codec = SKCodec.Create(path);
+        if (codec is null) throw new FileNotFoundException(id + ": Could not create gif codec", path);
+        return FromCodec(codec, id);
     }
 
     public static PawsGif FromFile(string path)

@@ -18,7 +18,7 @@ namespace PAWSC.Interfaces.Implementations
         public async Task Initialise(PawsRuntime runtime)
         {
             if (runtime == null) throw new ArgumentNullException(nameof(runtime));
-            
+
             runtime.Interfaces.Remove(this);
             foreach (var interfaceProxyElement in ProxyElements)
             {
@@ -74,11 +74,11 @@ namespace PAWSC.Interfaces.Implementations
         public T Interface { get; }
         public byte[] Bytes { get; }
         public int SpacerSizeBytes { get; }
-        
+
         public ToshiProtogenProxy(Identifier name, T rawInterface) : base(name)
         {
             Interface = rawInterface ?? throw new ArgumentNullException(nameof(rawInterface));
-            
+
             ProxyElements.Add(
                 new ToshiProtogenProxyElement(new Identifier("LEFT_P45"), this)
                 {
@@ -102,7 +102,7 @@ namespace PAWSC.Interfaces.Implementations
                 }
             );
             SpacerSizeBytes = Width * 3;
-            
+
             Bytes = new byte[rawInterface.InterfaceInfo.GetByteSize()];
 
             PopulateSpacers(30);
@@ -111,7 +111,7 @@ namespace PAWSC.Interfaces.Implementations
         private void PopulateSpacers(byte color = 255)
         {
             if (ProxyElements.Count <= 0) return;
-            
+
             int start = ProxyElements[0].InterfaceInfo.GetByteSize();
             for (int i = 1; i < ProxyElements.Count; i++)
             {
@@ -124,7 +124,7 @@ namespace PAWSC.Interfaces.Implementations
         public override void AcceptProxy(ReadOnlySpan<byte> data, InterfaceProxyElement element)
         {
             if (element == null) throw new ArgumentNullException(nameof(element));
-            
+
             int idx = ProxyElements.IndexOf(element);
             if (idx < 0) return;
 
@@ -136,14 +136,14 @@ namespace PAWSC.Interfaces.Implementations
             }
 
             Span<byte> toEdit = new Span<byte>(Bytes, start, element.InterfaceInfo.GetByteSize());
-            
+
             data.CopyTo(toEdit);
             Interface.Accept(Bytes);
         }
 
         public override PawsInterfaceInfo InterfaceInfo => Interface.InterfaceInfo;
-        public static int Width => 64 * 2;
-        public static int Height => 42 + 42 + 1;
+        public static int Width => 64 * 2 * 0 + 2;
+        public static int Height => (42 + 42 + 1) * 0 + 3;
     }
 
     /// <summary>
@@ -151,7 +151,7 @@ namespace PAWSC.Interfaces.Implementations
     /// </summary>
     public class ToshiProtogenProxyElement : InterfaceProxyElement
     {
-        public ToshiProtogenProxyElement(Identifier identifier, InterfaceProxyManager mgr) 
+        public ToshiProtogenProxyElement(Identifier identifier, InterfaceProxyManager mgr)
             : base(identifier, mgr)
         {
         }

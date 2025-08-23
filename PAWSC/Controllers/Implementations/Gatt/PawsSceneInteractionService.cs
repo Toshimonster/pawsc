@@ -1,5 +1,9 @@
-﻿using DotnetBleServer.Gatt.Description;
+﻿using System.Reflection;
+using DotnetBleServer.Core;
+using DotnetBleServer.Gatt;
+using DotnetBleServer.Gatt.Description;
 using PAWSC.Runtime;
+using Tmds.DBus;
 
 namespace PAWSC.Controllers.Implementations.Gatt;
 
@@ -12,7 +16,8 @@ public class PawsSceneInteractionService(PawsRuntime runtime) : IGattService
         GattCharacteristicDescriptions =
         {
             new InputControlCharacteristic(runtime),
-            new OutputEventsCharacteristic(runtime)
+            new OutputEventsCharacteristic(runtime),
+            new CounterCharacteristic()
         }
     };
 
@@ -75,6 +80,7 @@ public class PawsSceneInteractionService(PawsRuntime runtime) : IGattService
     {
         public override Task WriteValueAsync(byte[] value)
         {
+            runtime.Broadcast(new PawsCommands.GattSceneOutput("test", "test", []));
             // Decode generic payload
             var (sceneId, controlId, controlValue) = ScenePayloadEncoder.Decode(value);
 
@@ -87,6 +93,22 @@ public class PawsSceneInteractionService(PawsRuntime runtime) : IGattService
         public override Task<byte[]> ReadValueAsync()
         {
             throw new NotImplementedException();
+        }
+    }
+
+    public abstract class NotificationCharacterisitc : ConstructedCharacteristic
+    {
+        private static readonly FieldInfo EventField =
+            typeof(GattCharacteristicDescription).GetField("ValueUpdated",
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
+
+        public void RaiseValueUpdated()
+        {
+            var handler = (EventHandler<CharacteristicUpdatedEventArgs>)EventField.GetValue(this)!;
+            handler?.Invoke(this, new CharacteristicUpdatedEventArgs(this));
+        }
+        protected NotificationCharacterisitc(Guid uuid, CharacteristicFlags flags) : base(uuid, flags)
+        {
         }
     }
 
@@ -104,6 +126,14 @@ public class PawsSceneInteractionService(PawsRuntime runtime) : IGattService
             CharacteristicFlags.Notify)
         {
             runtime.Subscribe<PawsCommands.GattSceneOutput>(OnSceneOutput);
+            UpdateTest();
+        }
+
+        private async void UpdateTest()
+        {
+            SetValueAndNotify(BitConverter.GetBytes(Random.Shared.Next()));
+            await Task.Delay(2000);
+            UpdateTest();
         }
 
         private void OnSceneOutput(PawsCommands.GattSceneOutput e)
@@ -115,10 +145,16 @@ public class PawsSceneInteractionService(PawsRuntime runtime) : IGattService
             WriteValueAsync(payload);
         }
 
-        public override Task WriteValueAsync(byte[] value)
+        protected void SetValueAndNotify(byte[] value)
         {
             _currentValue = value;
-            return base.WriteValueAsync(value);
+            NotifyUpdate();
+        }
+
+        public override Task WriteValueAsync(byte[] value)
+        {
+            // Ignore
+            return Task.CompletedTask;
         }
 
         public override Task<byte[]> ReadValueAsync()

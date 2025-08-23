@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PAWSC", "PAWSC\PAWSC.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BLEStreamTester", "BLEStreamTester\BLEStreamTester.csproj", "{AA3439F0-729F-4A76-ABB9-1ACE1AB153D0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotnetBleServer", "DotnetBleServer\DotnetBleServer.csproj", "{51D159BB-FDBA-45B2-8E6E-3370DE453577}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{AA3439F0-729F-4A76-ABB9-1ACE1AB153D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AA3439F0-729F-4A76-ABB9-1ACE1AB153D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AA3439F0-729F-4A76-ABB9-1ACE1AB153D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51D159BB-FDBA-45B2-8E6E-3370DE453577}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51D159BB-FDBA-45B2-8E6E-3370DE453577}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51D159BB-FDBA-45B2-8E6E-3370DE453577}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51D159BB-FDBA-45B2-8E6E-3370DE453577}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ApplicationIcon />
+
+    <PackageId>BluetoothLE.Server.Linux</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>G.D.M</Authors>
+    <Description>
+      Bluetooth Advertising and GATT server functionality on Linux using .NET
+
+      Fork of .NET BLE Server
+
+      It uses BlueZ and Tmds.DBus. The provided API aims to preserve the object structure of BlueZ whilst minimizing the aspects of the D-Bus communication.
+    </Description>
+    <Copyright>Roman Scheidegger</Copyright>
+    <PackageProjectUrl>https://github.com/CarteKiwi/dotnet-ble-server</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/CarteKiwi/dotnet-ble-server</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>bluetooth, bluez, ble, .net, linux, uno, dotnet</PackageTags>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>Bluetooth Low Energy (BLE) server for .NET on Linux (Bluez wrapper)</Title>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Tmds.DBus" Version="0.15.0" />
+  </ItemGroup>
+
+</Project>
