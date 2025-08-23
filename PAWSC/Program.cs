@@ -15,6 +15,10 @@ class Program
         try
         {
             using var runtime = new PawsRuntime();
+            runtime.Subscribe<PawsCommands.Log>((e) =>
+            {
+                Console.WriteLine(e.Message);
+            });
 
             // Configure interfaces based on environment
             ConfigureInterfaces(runtime);

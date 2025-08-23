@@ -43,7 +43,6 @@ namespace DotnetBleServer.Gatt.Description
         /// </summary>
         public Task StartUpdatesAsync(CancellationToken cancellationToken = default)
         {
-            Console.WriteLine("START UPDATES");
             _notify = true;
             return Task.CompletedTask;
         }
@@ -53,7 +52,6 @@ namespace DotnetBleServer.Gatt.Description
         /// </summary>
         public Task StopUpdatesAsync(CancellationToken cancellationToken = default)
         {
-            Console.WriteLine("STOP UPDATES");
             _notify = false;
             return Task.CompletedTask;
         }
@@ -65,7 +63,6 @@ namespace DotnetBleServer.Gatt.Description
         {
             if (_notify)
             {
-                Console.WriteLine("NOTIFY");
                 ValueUpdated?.Invoke(this, new CharacteristicUpdatedEventArgs(this));
                 
             }

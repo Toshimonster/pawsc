@@ -41,6 +41,7 @@ public abstract class GattCapableScene(Identifier identifier) : BaseScene(identi
     /// <param name="command">The command containing the target scene ID, control ID, and payload.</param>
     private void OnGattControlCommand(PawsCommands.GattSceneControl command)
     {
+        Console.WriteLine("COMMAND -> " + command.SceneId);
         _ = OnGattControlCommandAsync(command);
     }
 
@@ -51,8 +52,8 @@ public abstract class GattCapableScene(Identifier identifier) : BaseScene(identi
     /// <param name="e">The GATT control command to process.</param>
     private async Task OnGattControlCommandAsync(PawsCommands.GattSceneControl e)
     {
+        Console.WriteLine("Scene needed -> " + Id);
         if (!Id.Matches(e.SceneId)) return;
-
         try
         {
             if (_controlHandlers.TryGetValue(e.ControlId, out var handler))

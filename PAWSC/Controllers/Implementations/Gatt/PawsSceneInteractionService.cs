@@ -16,8 +16,7 @@ public class PawsSceneInteractionService(PawsRuntime runtime) : IGattService
         GattCharacteristicDescriptions =
         {
             new InputControlCharacteristic(runtime),
-            new OutputEventsCharacteristic(runtime),
-            new CounterCharacteristic()
+            new OutputEventsCharacteristic(runtime)
         }
     };
 
@@ -85,6 +84,7 @@ public class PawsSceneInteractionService(PawsRuntime runtime) : IGattService
             var (sceneId, controlId, controlValue) = ScenePayloadEncoder.Decode(value);
 
             // Broadcast to runtime so the active scene receives the input
+            Console.WriteLine("EVENT ->" + sceneId + ", " + controlId + ", " + controlValue);
             runtime.Broadcast(new PawsCommands.GattSceneControl(sceneId, controlId, controlValue));
 
             return Task.CompletedTask;
@@ -93,22 +93,6 @@ public class PawsSceneInteractionService(PawsRuntime runtime) : IGattService
         public override Task<byte[]> ReadValueAsync()
         {
             throw new NotImplementedException();
-        }
-    }
-
-    public abstract class NotificationCharacterisitc : ConstructedCharacteristic
-    {
-        private static readonly FieldInfo EventField =
-            typeof(GattCharacteristicDescription).GetField("ValueUpdated",
-                BindingFlags.Instance | BindingFlags.NonPublic)!;
-
-        public void RaiseValueUpdated()
-        {
-            var handler = (EventHandler<CharacteristicUpdatedEventArgs>)EventField.GetValue(this)!;
-            handler?.Invoke(this, new CharacteristicUpdatedEventArgs(this));
-        }
-        protected NotificationCharacterisitc(Guid uuid, CharacteristicFlags flags) : base(uuid, flags)
-        {
         }
     }
 
@@ -126,14 +110,6 @@ public class PawsSceneInteractionService(PawsRuntime runtime) : IGattService
             CharacteristicFlags.Notify)
         {
             runtime.Subscribe<PawsCommands.GattSceneOutput>(OnSceneOutput);
-            UpdateTest();
-        }
-
-        private async void UpdateTest()
-        {
-            SetValueAndNotify(BitConverter.GetBytes(Random.Shared.Next()));
-            await Task.Delay(2000);
-            UpdateTest();
         }
 
         private void OnSceneOutput(PawsCommands.GattSceneOutput e)
