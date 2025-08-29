@@ -6,11 +6,21 @@ namespace PAWSC.Controllers.Implementations;
 
 public class FileState
 {
-    public IPawsGif State { get; private set; }
+    public IPawsGif Gif { get; private set; }
+
+    public IPawsState State
+    {
+        get
+        {
+            BaseState state = new BaseState(Identifier.Random());
+            state.AddGif(new Identifier("LEFT_P45"), Gif);
+            return state;
+        }
+    }
 
     private FileState(IPawsGif gif)
     {
-        State = gif;
+        Gif = gif;
     }
 
     public static FileState From(string path, byte[] content)
@@ -23,13 +33,14 @@ public class FileState
 
     public FileState UpdateFrom(byte[] content)
     {
-        State = PawsGif.FromBytes(content, State.Id);
+        Gif = PawsGif.FromBytes(content, State.Id);
         return this;
     }
 }
 
 public class FileSystemStateController : PawsController
 {
+    private StateScene? StateScene;
     private readonly ConcurrentDictionary<string, FileState> FileStates = new();
     private readonly FileSystemWatcher Watcher;
     private readonly string FilePath;
@@ -51,6 +62,14 @@ public class FileSystemStateController : PawsController
 
     public override async Task Initialise(PawsRuntime runtime)
     {
+        await base.Initialise(runtime);
+        StateScene = runtime.Scenes.ValuesOfType<StateScene>().FirstOrDefault();
+        if (StateScene is null)
+        {
+            Runtime?.Broadcast(PawsCommands.Log.Warn("Ignoring FileSystemStateController as no StateScene is detected"));
+            return;
+        }
+
         await LoadAllFiles();
         Watcher.EnableRaisingEvents = true;
         Watcher.Changed += async (sender, args) =>
@@ -96,6 +115,7 @@ public class FileSystemStateController : PawsController
             file,
             s => FileState.From(s, fileBytes),
             (_, state) => state.UpdateFrom(fileBytes));
+        StateScene?.AddState(FileStates[file].State);
     }
 
     private void DeleteFile(string file)
