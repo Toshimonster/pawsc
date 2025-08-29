@@ -142,8 +142,8 @@ namespace PAWSC.Interfaces.Implementations
         }
 
         public override PawsInterfaceInfo InterfaceInfo => Interface.InterfaceInfo;
-        public static int Width => 64 * 2 * 0 + 2;
-        public static int Height => (42 + 42 + 1) * 0 + 3;
+        public static int Width => 64 * 1 * 1;
+        public static int Height => (32 + 1) * 1;
     }
 
     /// <summary>

@@ -26,29 +26,24 @@ public class GattController(Identifier id, string localName = "ToshiProto") : Pa
 
     public override async Task Initialise(PawsRuntime runtime)
     {
+        await base.Initialise(runtime);
+        var builder = BuildServices(runtime);
         try
         {
-            var builder = BuildServices(runtime);
             await StartGattServer(builder);
-            Console.WriteLine("GATT server started successfully");
+            Runtime?.Broadcast(PawsCommands.Log.Info("GATT server started successfully"));
         }
         catch (Tmds.DBus.DBusException ex) when (ex.ErrorName?.Contains("org.bluez.Error.Failed") == true)
         {
-            Console.WriteLine("⚠️  Bluetooth LE server failed to start due to permission issues.");
-            Console.WriteLine("   This is likely due to missing system permissions or Bluetooth service not running.");
-            Console.WriteLine("   The application will continue without Bluetooth functionality.");
-            Console.WriteLine($"   Error details: {ex.Message}");
+            Runtime?.Broadcast(PawsCommands.Log.Warn("Bluetooth LE server initially failed to start due to permission issues.", ex));
 
-            // Continue without Bluetooth - this is a non-fatal error
-            // The application can still function with other interfaces
+            await StartGattServer(builder);
+            Runtime?.Broadcast(PawsCommands.Log.Info("GATT server started successfully"));
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Failed to start GATT server: {ex.Message}");
-            Console.WriteLine("   The application will continue without Bluetooth functionality.");
-
-            // Log the full exception for debugging but don't crash
-            Console.WriteLine($"   Full exception: {ex}");
+            Runtime?.Broadcast(PawsCommands.Log.Error($"❌ Failed to start GATT server: {ex.Message}", ex));
+            Runtime?.Broadcast(PawsCommands.Log.Error("The application will continue without Bluetooth functionality."));
         }
     }
 
@@ -61,11 +56,11 @@ public class GattController(Identifier id, string localName = "ToshiProto") : Pa
         return appBuilder;
     }
 
-    private static async Task<bool> IsBluetoothAvailableAsync()
+    private async Task<bool> IsBluetoothAvailableAsync()
     {
         try
         {
-            Console.WriteLine("🔍 Checking Bluetooth availability...");
+            Runtime?.Broadcast(PawsCommands.Log.Trace("Checking Bluetooth availability..."));
 
             // Simple check: try to create a server context
             // If this fails, Bluetooth is not available
@@ -76,12 +71,12 @@ public class GattController(Identifier id, string localName = "ToshiProto") : Pa
             var powered = await adapter.GetPoweredAsync();
             var address = await adapter.GetAddressAsync();
 
-            Console.WriteLine($"✅ Bluetooth adapter found: {address}, Powered: {powered}");
+            Runtime?.Broadcast(PawsCommands.Log.Debug($"Bluetooth adapter found: {address}, Powered: {powered}"));
             return true;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Bluetooth not available: {ex.Message}");
+            Runtime?.Broadcast(PawsCommands.Log.Error($"Bluetooth not available: {ex.Message}", ex));
             return false;
         }
     }
@@ -90,13 +85,13 @@ public class GattController(Identifier id, string localName = "ToshiProto") : Pa
     {
         if (!await IsBluetoothAvailableAsync())
         {
-            Console.WriteLine("⚠️  Bluetooth service not available. Skipping GATT server startup.");
+            Runtime?.Broadcast(PawsCommands.Log.Error("Bluetooth service not available. Skipping GATT server startup."));
             return;
         }
 
         try
         {
-            Console.WriteLine("🚀 Starting GATT server...");
+            Runtime?.Broadcast(PawsCommands.Log.Debug("Starting GATT server..."));
 
             ServerContext = new ServerContext();
             await ServerContext.ConnectAndSetDefaultAdapter();
@@ -111,19 +106,19 @@ public class GattController(Identifier id, string localName = "ToshiProto") : Pa
             }
 
             var adapterAddress = await ServerContext.Adapter.GetAddressAsync();
-            Console.WriteLine($"✅ Bluetooth adapter ready: {adapterAddress}");
+            Runtime?.Broadcast(PawsCommands.Log.Debug($"Bluetooth adapter ready: {adapterAddress}"));
 
             // Start advertisement first
             await StartAdvertisement(ServerContext);
 
             // Register the GATT application
-            Console.WriteLine("📝 Registering GATT application...");
+            Runtime?.Broadcast(PawsCommands.Log.Debug("Registering GATT application..."));
             var gattManager = new GattApplicationManager(ServerContext);
             await gattManager.RegisterGattApplication(builder.BuildServiceDescriptions());
 
             AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
 
-            Console.WriteLine("✅ GATT server started successfully with basic service");
+            Runtime?.Broadcast(PawsCommands.Log.Info("GATT server started successfully with basic service"));
         }
         catch (Tmds.DBus.DBusException ex) when (ex.ErrorName?.Contains("org.bluez.Error.Failed") == true)
         {
@@ -142,11 +137,11 @@ public class GattController(Identifier id, string localName = "ToshiProto") : Pa
             var mgr = new AdvertisingManager(serverContext);
 
             await mgr.CreateAdvertisement(Advertisement);
-            Console.WriteLine("✅ Bluetooth advertisement started successfully");
+            Runtime?.Broadcast(PawsCommands.Log.Info("Bluetooth advertisement started successfully"));
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"⚠️  Failed to start advertisement: {ex.Message}");
+            Runtime?.Broadcast(PawsCommands.Log.Error($"Failed to start advertisement: {ex.Message}", ex));
             // Don't throw - advertisement failure shouldn't prevent GATT registration
         }
     }

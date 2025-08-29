@@ -10,6 +10,7 @@ public abstract class SkiaSharpScene : SkiaSharpRasterScene
     protected SKImageInfo SceneImageInfo { get; }
     protected SKSurface Surface { get; }
     protected SKCanvas Canvas => Surface.Canvas;
+    protected virtual bool ClearOnDraw => true;
 
     protected SkiaSharpScene(Identifier name, int width = 255, int height = 255, SKColorType colorType = SKColorType.Bgra8888) : base(name)
     {
@@ -17,15 +18,10 @@ public abstract class SkiaSharpScene : SkiaSharpRasterScene
         Surface = SKSurface.Create(SceneImageInfo);
     }
 
-    public override Task Initialise(PawsRuntime runtime)
-    {
-        return Task.CompletedTask;
-    }
-
     public override void Draw(PawsInterfaceManager mgr, DrawInfo drawInfo)
     {
         // Clear or prepare the main canvas
-        Canvas.Clear(SKColors.Transparent);
+        if (ClearOnDraw) Canvas.Clear(SKColors.Transparent);
 
         // Draw the full scene once
         RenderScene(drawInfo);

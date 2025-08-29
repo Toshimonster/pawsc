@@ -12,7 +12,7 @@ public abstract class GameScene(Identifier id) : SkiaSharpScene(id, 64, 32)
     public override Task Initialise(PawsRuntime runtime)
     {
         RegisterControl<ControllerValues>("gameControl", OnInput);
-        return Task.CompletedTask;
+        return base.Initialise(runtime);
     }
 
     protected abstract Task OnInput(ControllerValues e);

@@ -54,13 +54,25 @@ class Program
         }
         else
         {
-            // Terminal interface for development/testing
-            runtime.Interfaces.Add(new ToshiProtogenProxy<TerminalInterface>(
-                new Identifier("TEST"),
-                new TerminalInterface(ToshiProtogenProxy<TerminalInterface>.Width, ToshiProtogenProxy<TerminalInterface>.Height)
+            bool emulateProto = false;
+            if (emulateProto)
+            {
+                // Terminal interface for development/testing
+                runtime.Interfaces.Add(new ToshiProtogenProxy<TerminalInterface>(
+                    new Identifier("TEST"),
+                    new TerminalInterface(ToshiProtogenProxy<TerminalInterface>.Width,
+                        ToshiProtogenProxy<TerminalInterface>.Height)
+                    {
+                        Id = new Identifier("Term")
+                    }));
+            }
+            else
+            {
+                runtime.Interfaces.Add(new TerminalInterface(64, 32)
                 {
-                    Id = new Identifier("Term")
-                }));
+                    Id = new Identifier("LEFT_P45")
+                });
+            }
         }
     }
 
@@ -69,9 +81,11 @@ class Program
         try
         {
             // Add Bluetooth controller if available
-            var testController = new TestController(new Identifier("!!"));
+            var testController = new TestController(Identifier.Random());
             runtime.Controllers.Add(testController);
-            Console.WriteLine("✅ Test controller added successfully");
+            var terminalController = new TerminalController(Identifier.Random());
+            runtime.Controllers.Add(terminalController);
+            Console.WriteLine("✅ Controllers added successfully");
         }
         catch (Exception ex)
         {

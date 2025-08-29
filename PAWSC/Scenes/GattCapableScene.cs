@@ -41,7 +41,6 @@ public abstract class GattCapableScene(Identifier identifier) : BaseScene(identi
     /// <param name="command">The command containing the target scene ID, control ID, and payload.</param>
     private void OnGattControlCommand(PawsCommands.GattSceneControl command)
     {
-        Console.WriteLine("COMMAND -> " + command.SceneId);
         _ = OnGattControlCommandAsync(command);
     }
 
@@ -113,7 +112,7 @@ public abstract class GattCapableScene(Identifier identifier) : BaseScene(identi
                     await Console.Error.WriteLineAsync("Could not find runtime to export gatt return result");
                     return;
                 }
-                Runtime?.Broadcast(new PawsCommands.GattSceneOutput(Id.ToString(), controlId, EncodeValue(result)));
+                Runtime?.Broadcast(new PawsCommands.GattSceneControl(Id.ToString(), controlId, EncodeValue(result)));
             }
             else
             {
@@ -181,7 +180,7 @@ public abstract class GattCapableScene(Identifier identifier) : BaseScene(identi
     /// <param name="payload">The raw byte array received from the GATT command.</param>
     /// <returns>The decoded value of type <typeparamref name="T"/>.</returns>
     /// <exception cref="NotSupportedException">Thrown if the type <typeparamref name="T"/> is not supported.</exception>
-    private static T DecodeValue<T>(byte[] payload)
+    public static T DecodeValue<T>(byte[] payload)
     {
         var targetType = typeof(T);
 
@@ -210,7 +209,7 @@ public abstract class GattCapableScene(Identifier identifier) : BaseScene(identi
     /// <param name="value">The value to encode.</param>
     /// <returns>A byte array representing the encoded value.</returns>
     /// <exception cref="NotSupportedException">Thrown if the type <typeparamref name="T"/> is not supported.</exception>
-    private static byte[] EncodeValue<T>(T value)
+    public static byte[] EncodeValue<T>(T value)
     {
         return value switch
         {

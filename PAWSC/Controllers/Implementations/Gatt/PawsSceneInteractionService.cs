@@ -84,7 +84,7 @@ public class PawsSceneInteractionService(PawsRuntime runtime) : IGattService
             var (sceneId, controlId, controlValue) = ScenePayloadEncoder.Decode(value);
 
             // Broadcast to runtime so the active scene receives the input
-            Console.WriteLine("EVENT ->" + sceneId + ", " + controlId + ", " + controlValue);
+            runtime.Broadcast(PawsCommands.Log.Trace("EVENT ->" + sceneId + ", " + controlId + ", " + controlValue));
             runtime.Broadcast(new PawsCommands.GattSceneControl(sceneId, controlId, controlValue));
 
             return Task.CompletedTask;
@@ -103,18 +103,21 @@ public class PawsSceneInteractionService(PawsRuntime runtime) : IGattService
     /// </summary>
     protected class OutputEventsCharacteristic : ConstructedCharacteristic
     {
+        public PawsRuntime Runtime { get; }
         private byte[] _currentValue = [];
 
         public OutputEventsCharacteristic(PawsRuntime runtime): base(
             UuidRegistry.SceneInteractionCharacteristics.OutputEvents,
             CharacteristicFlags.Notify)
         {
+            Runtime = runtime;
             runtime.Subscribe<PawsCommands.GattSceneOutput>(OnSceneOutput);
         }
 
         private void OnSceneOutput(PawsCommands.GattSceneOutput e)
         {
             // Encode SceneID + EventID + Value
+            Runtime.Broadcast(PawsCommands.Log.Trace("To Send: " + e.SceneId + "|" +  e.ControlId + "|" + e.OutputValue));
             var payload = ScenePayloadEncoder.Encode(e.SceneId, e.ControlId, e.OutputValue);
 
             // Notify all connected clients

@@ -12,9 +12,10 @@ public class DinoGame(Identifier id) : GameScene(id)
         // Dino (pixelated)
         private float dinoX = 6;
         private float dinoY;
-        private const int DinoW = 8;
-        private const int DinoH = 8;
+        private const int DinoW = 16;
+        private const int DinoH = 16;
         private bool isJumping = false;
+        private bool isDead = false;
         private float vy = 0;
         private const float Gravity = 120f;      // pixels / s^2
         private const float JumpVelocity = -50f; // pixels / s
@@ -47,7 +48,10 @@ public class DinoGame(Identifier id) : GameScene(id)
             if (e == ControllerValues.A ||
                 e == ControllerValues.Up)
             {
-                if (!isJumping)
+                if (isDead)
+                {
+                    ResetGame();
+                } else if (!isJumping)
                 {
                     isJumping = true;
                     vy = JumpVelocity;
@@ -57,8 +61,24 @@ public class DinoGame(Identifier id) : GameScene(id)
             return Task.CompletedTask;
         }
 
+        protected override bool ClearOnDraw => false;
+
         protected override void RenderScene(DrawInfo drawInfo)
         {
+            // white paint, no AA for sharp pixels
+            using var paint = new SKPaint
+            {
+                Color = SKColors.White,
+                IsAntialias = false,
+                Style = SKPaintStyle.Fill
+            };
+
+            if (isDead)
+            {
+                DrawDino(Canvas, paint);
+                return;
+            }
+
             // determine elapsed time
             var now = DateTime.UtcNow;
             var elapsed = (now - lastUpdate).TotalSeconds;
@@ -69,15 +89,7 @@ public class DinoGame(Identifier id) : GameScene(id)
             UpdateWorld(elapsed);
 
             // black background
-            Canvas.Clear(SKColors.Black);
-
-            // white paint, no AA for sharp pixels
-            using var paint = new SKPaint
-            {
-                Color = SKColors.White,
-                IsAntialias = false,
-                Style = SKPaintStyle.Fill
-            };
+            Canvas.Clear(SKColors.Transparent);
 
             // ground
             Canvas.DrawRect(new SKRect(0, groundY, SceneImageInfo.Width, groundY + 1), paint);
@@ -145,11 +157,13 @@ public class DinoGame(Identifier id) : GameScene(id)
                 }
 
                 // collision (AABB)
-                if (AabbCollision(dinoX, dinoY, DinoW, DinoH,
+                var forgiveness = 4;
+                var heightForgiveness = 2;
+                if (AabbCollision(dinoX, dinoY, DinoW - forgiveness, DinoH - heightForgiveness,
                                   obstacles[i].X, obstacles[i].Y, obstacles[i].Width, obstacles[i].Height))
                 {
                     // simple reset on hit
-                    ResetGame();
+                    GameOver();
                     break;
                 }
             }
@@ -158,50 +172,89 @@ public class DinoGame(Identifier id) : GameScene(id)
             worldSpeed += 0.5f * (float)dt;
         }
 
+        private static readonly ushort[][] DinoFrames = new ushort[][]
+        { [
+            0b0000000011111000,
+            0b0000000111111111,
+            0b0000000111111111,
+            0b0000000111111111,
+            0b1000000111100000,
+            0b1000001111111110,
+            0b1100011111000000,
+            0b1110111111111000,
+            0b1111111111110100,
+            0b1111111111100000,
+            0b0111111111100000,
+            0b0011111111000000,
+            0b0001111110000000,
+            0b0000111110000000,
+            0b0000010011000000,
+            0b0000011000000000
+        ],[
+            0b0000000011111000,
+            0b0000000111111111,
+            0b0000000111111111,
+            0b0000000111111111,
+            0b1000000111100000,
+            0b1000001111111110,
+            0b1100011111000000,
+            0b1110111111111000,
+            0b1111111111110100,
+            0b1111111111100000,
+            0b0111111111100000,
+            0b0011111111000000,
+            0b0001111110000000,
+            0b0000111110000000,
+            0b0000011010000000,
+            0b0000000011000000
+            ]
+        };
+
+        private static readonly ushort[] DinoDead = new ushort[]
+        {
+            0b0000000011111000,
+            0b0000000110111111,
+            0b0000000101011111,
+            0b0000000110111111,
+            0b1000000111100000,
+            0b1000001111111110,
+            0b1100011111000000,
+            0b1110111111111000,
+            0b1111111111100100,
+            0b1111111111100000,
+            0b0111111111100000,
+            0b0011111111000000,
+            0b0001111110000000,
+            0b0000111100000000,
+            0b0000010010000000,
+            0b0000011011000000,
+        };
+
         private void DrawDino(SKCanvas canvas, SKPaint paint)
         {
-            // pixel rows for a simple 8x8 dino (two frames) — represented as booleans (1 = pixel)
-            // very small, stylized blocky dino
-            // Frame 0
-            byte[] frame0 = new byte[]
-            {
-                0b00111100, // ..████..
-                0b01111110, // .██████.
-                0b11111111, // ████████
-                0b11111111, // ████████
-                0b11111111, // ████████
-                0b01111100, // .████..
-                0b00111000, // ..███..
-                0b00010000  // ...█...
-            };
+            var chosen = DinoFrames[runFrame];
+            if (isDead) chosen = DinoDead;
 
-            // Frame 1 (leg swapped)
-            byte[] frame1 = new byte[]
-            {
-                0b00111100,
-                0b01111110,
-                0b11111111,
-                0b11111111,
-                0b11111111,
-                0b01111100,
-                0b00011000,
-                0b00100000
-            };
+            drawDinoImg(canvas, paint, chosen);
+        }
 
-            var chosen = runFrame == 0 ? frame0 : frame1;
-
+        private void drawDinoImg(SKCanvas canvas, SKPaint paint, ushort[] dino)
+        {
             var baseX = (int)Math.Round(dinoX);
             var baseY = (int)Math.Round(dinoY);
 
             // draw each bit as a 1x1 pixel rectangle (scale = 1 because display is small)
-            for (int row = 0; row < 8; row++)
+            for (int row = 0; row < 16; row++)
             {
-                byte b = chosen[row];
-                for (int col = 0; col < 8; col++)
+                ushort b = dino[row];
+                for (int col = 0; col < 16; col++)
                 {
-                    if ((b & (1 << (7 - col))) != 0)
+                    if ((b & (1 << (15 - col))) != 0)
                     {
-                        canvas.DrawRect(new SKRect(baseX + col, baseY + row, baseX + col + 1, baseY + row + 1), paint);
+                        canvas.DrawRect(
+                            new SKRect(baseX + col, baseY + row, baseX + col + 1, baseY + row + 1),
+                            paint
+                        );
                     }
                 }
             }
@@ -229,8 +282,14 @@ public class DinoGame(Identifier id) : GameScene(id)
                      y1 + h1 <= y2 || y1 >= y2 + h2);
         }
 
+        private void GameOver()
+        {
+            isDead = true;
+        }
+
         private void ResetGame()
         {
+            isDead = false;
             obstacles.Clear();
             dinoY = groundY - DinoH;
             isJumping = false;
