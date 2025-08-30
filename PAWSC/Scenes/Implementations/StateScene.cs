@@ -128,6 +128,7 @@ public class StateScene : SkiaSharpRasterScene
 
     public override Task Initialise(PawsRuntime runtime)
     {
+        base.Initialise(runtime);
         RegisterControl<Identifier>("setState", OnSetState);
         RegisterControl("getState", OnGetState);
         RegisterControl("getStateList", OnGetStateList);
@@ -180,14 +181,15 @@ public class StateScene : SkiaSharpRasterScene
         {
             ActiveState = identifier;
         }
-        catch
+        catch (Exception ex)
         {
-            //Ignore
+            Runtime?.Broadcast(PawsCommands.Log.Warn($"Could not set state to {identifier}", ex));
         }
     }
 
     private Task OnSetState(Identifier identifier)
     {
+        Runtime?.Broadcast(PawsCommands.Log.Trace($"Setting state to {identifier}"));
         SetStateFromId(identifier);
         return Task.CompletedTask;
     }

@@ -17,7 +17,11 @@ class Program
             using var runtime = new PawsRuntime();
             runtime.Subscribe<PawsCommands.Log>((e) =>
             {
-                Console.WriteLine(e.Message);
+                Console.WriteLine($"[{e.Level}] {e.Message}");
+                if (e.Exception is not null)
+                {
+                    Console.WriteLine(e.Exception.ToString());
+                }
             });
 
             // Configure interfaces based on environment

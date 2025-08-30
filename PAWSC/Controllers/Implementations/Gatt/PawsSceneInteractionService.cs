@@ -56,7 +56,6 @@ public class PawsSceneInteractionService(PawsRuntime runtime) : IGattService
                 index += idLen;
 
                 // Value (rest of bytes)
-                index += 2;
                 var value = payload.Skip(index).ToArray();
 
                 return (sceneId, controlOrEventId, value);
@@ -79,12 +78,11 @@ public class PawsSceneInteractionService(PawsRuntime runtime) : IGattService
     {
         public override Task WriteValueAsync(byte[] value)
         {
-            runtime.Broadcast(new PawsCommands.GattSceneOutput("test", "test", []));
             // Decode generic payload
             var (sceneId, controlId, controlValue) = ScenePayloadEncoder.Decode(value);
 
             // Broadcast to runtime so the active scene receives the input
-            runtime.Broadcast(PawsCommands.Log.Trace("EVENT ->" + sceneId + ", " + controlId + ", " + controlValue));
+            runtime.Broadcast(PawsCommands.Log.Trace("Recieved Command ->" + sceneId + ", " + controlId + ", " + string.Join(" ", controlValue.Select(b => b.ToString("X2")))));
             runtime.Broadcast(new PawsCommands.GattSceneControl(sceneId, controlId, controlValue));
 
             return Task.CompletedTask;
@@ -117,11 +115,11 @@ public class PawsSceneInteractionService(PawsRuntime runtime) : IGattService
         private void OnSceneOutput(PawsCommands.GattSceneOutput e)
         {
             // Encode SceneID + EventID + Value
-            Runtime.Broadcast(PawsCommands.Log.Trace("To Send: " + e.SceneId + "|" +  e.ControlId + "|" + e.OutputValue));
+            Runtime.Broadcast(PawsCommands.Log.Trace("To Output: " + e.SceneId + "|" +  e.ControlId + "|" + e.OutputValue));
             var payload = ScenePayloadEncoder.Encode(e.SceneId, e.ControlId, e.OutputValue);
 
             // Notify all connected clients
-            WriteValueAsync(payload);
+            SetValueAndNotify(payload);
         }
 
         protected void SetValueAndNotify(byte[] value)

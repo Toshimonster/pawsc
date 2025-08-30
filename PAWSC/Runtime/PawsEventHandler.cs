@@ -72,7 +72,11 @@ public class PawsEventHandler
     {
         ArgumentNullException.ThrowIfNull(command);
 
-        if (!_handlers.TryGetValue(command.GetType(), out var handlers)) return;
+        if (!_handlers.TryGetValue(command.GetType(), out var handlers))
+        {
+            Console.WriteLine($"No handlers for {command.GetType()} have been subscribed");
+            return;
+        }
 
         foreach (var handler in handlers.Union(_globalHandlers))
         {

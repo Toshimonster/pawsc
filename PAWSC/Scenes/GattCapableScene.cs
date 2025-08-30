@@ -51,7 +51,6 @@ public abstract class GattCapableScene(Identifier identifier) : BaseScene(identi
     /// <param name="e">The GATT control command to process.</param>
     private async Task OnGattControlCommandAsync(PawsCommands.GattSceneControl e)
     {
-        Console.WriteLine("Scene needed -> " + Id);
         if (!Id.Matches(e.SceneId)) return;
         try
         {
@@ -112,7 +111,7 @@ public abstract class GattCapableScene(Identifier identifier) : BaseScene(identi
                     await Console.Error.WriteLineAsync("Could not find runtime to export gatt return result");
                     return;
                 }
-                Runtime?.Broadcast(new PawsCommands.GattSceneControl(Id.ToString(), controlId, EncodeValue(result)));
+                Runtime?.Broadcast(new PawsCommands.GattSceneOutput(Id.ToString(), controlId, EncodeValue(result)));
             }
             else
             {
