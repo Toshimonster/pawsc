@@ -1,0 +1,17 @@
+.pixelGridCanvas {
+    padding-left: 0;
+    padding-right: 0;
+    display: block;
+    margin: 20px auto;
+}
+.pixelGridDiv {
+    padding-left: 0;
+    padding-right: 0;
+    margin-top: auto;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+.resetFab {
+    margin: auto;
+}

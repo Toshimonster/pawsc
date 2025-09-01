@@ -1,0 +1,115 @@
+/* TestPage.css */
+ion-card {
+  margin-bottom: 16px;
+}
+
+ion-card-header {
+  padding-bottom: 8px;
+}
+
+ion-card-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+ion-grid {
+  padding: 0;
+}
+
+ion-row {
+  align-items: center;
+  padding: 8px 0;
+}
+
+ion-col {
+  padding: 4px;
+}
+
+ion-label {
+  font-size: 0.9rem;
+}
+
+ion-button {
+  --padding-start: 8px;
+  --padding-end: 8px;
+}
+
+ion-chip {
+  font-weight: 500;
+}
+
+ion-item {
+  --padding-start: 0;
+  --inner-padding-end: 0;
+}
+
+ion-item h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+}
+
+ion-item p {
+  font-size: 0.85rem;
+  margin: 2px 0;
+  color: var(--ion-color-medium);
+}
+
+ion-input {
+  --padding-start: 8px;
+  --padding-end: 8px;
+  --background: var(--ion-color-light);
+  --border-radius: 4px;
+}
+
+ion-textarea {
+  --padding-start: 8px;
+  --padding-end: 8px;
+  --background: var(--ion-color-light);
+  --border-radius: 4px;
+}
+
+/* Custom button styles */
+.test-command-button {
+  --border-radius: 6px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+}
+
+/* Status indicators */
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.connection-status ion-icon {
+  font-size: 1.2rem;
+}
+
+/* Event list styling */
+.event-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.event-item {
+  border-left: 3px solid var(--ion-color-primary);
+  margin-bottom: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  ion-col {
+    padding: 2px;
+  }
+  
+  ion-card-title {
+    font-size: 1.1rem;
+  }
+  
+  ion-label {
+    font-size: 0.8rem;
+  }
+}
+

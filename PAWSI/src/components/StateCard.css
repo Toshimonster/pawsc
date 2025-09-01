@@ -1,0 +1,19 @@
+.StateCard {
+    margin: 5px;
+    width: 150px;
+    height: 150px;
+}
+
+.StateImage {
+    background: black;
+    margin: 5px;
+    width: 140px;
+    height: 70px;
+    image-rendering: pixelated;
+    border-radius: 5px;
+}
+
+.Transition {
+    transition: transform 0.3s ease-in-out,
+    all 0.5s ease;
+}

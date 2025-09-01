@@ -1,0 +1,61 @@
+.game-controller-card {
+	margin: 20px 0;
+}
+
+.game-controller-grid {
+	padding: 20px;
+}
+
+.dpad-button {
+	height: 60px;
+	width: 60px;
+	--border-radius: 50%;
+	transition: all 0.1s ease;
+}
+
+.dpad-button:hover {
+	transform: scale(1.05);
+}
+
+.dpad-button:active {
+	transform: scale(0.95);
+}
+
+.action-button {
+	height: 60px;
+	width: 60px;
+	--border-radius: 50%;
+	transition: all 0.1s ease;
+}
+
+.action-button:hover {
+	transform: scale(1.05);
+}
+
+.action-button:active {
+	transform: scale(0.95);
+}
+
+.status-display {
+	font-size: 14px;
+	color: var(--ion-color-medium);
+	min-height: 20px;
+	text-align: center;
+	margin-top: 20px;
+}
+
+.button-row {
+	margin-bottom: 10px;
+}
+
+.button-row:last-child {
+	margin-bottom: 0;
+}
+
+.action-buttons-row {
+	margin-top: 20px;
+}
+
+.dpad-section {
+	margin-bottom: 20px;
+} 
