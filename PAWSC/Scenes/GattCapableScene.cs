@@ -41,6 +41,7 @@ public abstract class GattCapableScene(Identifier identifier) : BaseScene(identi
     /// <param name="command">The command containing the target scene ID, control ID, and payload.</param>
     private void OnGattControlCommand(PawsCommands.GattSceneControl command)
     {
+        Runtime?.Broadcast(PawsCommands.Log.Trace($"{this.Id} recieved {command}"));
         _ = OnGattControlCommandAsync(command);
     }
 
@@ -52,6 +53,7 @@ public abstract class GattCapableScene(Identifier identifier) : BaseScene(identi
     private async Task OnGattControlCommandAsync(PawsCommands.GattSceneControl e)
     {
         if (!Id.Matches(e.SceneId)) return;
+        Runtime?.Broadcast(PawsCommands.Log.Trace($"{this.Id} Accepted {e}"));
         try
         {
             if (_controlHandlers.TryGetValue(e.ControlId, out var handler))
@@ -190,7 +192,7 @@ public abstract class GattCapableScene(Identifier identifier) : BaseScene(identi
             var t when t == typeof(bool) => payload.Length > 0 && payload[0] != 0,
             var t when t == typeof(string) => Encoding.UTF8.GetString(payload),
             var t when t == typeof(byte[]) => payload,
-            var t when t == typeof(Identifier) => new Identifier(Encoding.UTF8.GetString(payload)),
+            var t when t == typeof(Identifier) => Identifier.FromRawString(Encoding.UTF8.GetString(payload)),
 
             // Generic enum support: decode as int, then cast
             _ when targetType.IsEnum => Enum.ToObject(targetType, BitConverter.ToInt32(payload, 0)),

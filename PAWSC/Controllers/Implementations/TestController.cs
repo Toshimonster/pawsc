@@ -38,7 +38,12 @@ public class TestController : GattController
 
         var state = new BaseState(new Identifier("Test"));
         var state2 = new BaseState(new Identifier("Test2"));
-        if (File.Exists("./start.gif")) {
+        if (File.Exists(
+                     "/home/toshi/State Assets/Happy/Happy[face_mirror].gif"))
+        {
+            state.AddGif(new Identifier("LEFT_P45"), PawsGif.FromFile("/home/toshi/State Assets/Happy/Happy[face_mirror].gif"));
+            state2.AddGif(new Identifier("LEFT_P45"), PawsGif.FromFile("/home/toshi/State Assets/Bluescreen/Idle-Bluescreen[face].gif"));
+        } else if (File.Exists("./start.gif")) {
             state.AddGif(new Identifier("LEFT_P45"), PawsGif.FromFile("./start.gif"));
             state2.AddGif(new Identifier("LEFT_P45"), PawsGif.FromFile("./start.gif"));
         } else if (File.Exists("/home/toshi/Documents/Personal/Proto/ToshiProto/State Assets/Happy/Happy[face_mirror].gif"))
@@ -47,11 +52,11 @@ public class TestController : GattController
             state2.AddGif(new Identifier("LEFT_P45"), PawsGif.FromFile("/home/toshi/Documents/Personal/Proto/ToshiProto/State Assets/Bluescreen/Idle-Bluescreen[face].gif"));
         }
 
-        var stateScene = new StateScene(new Identifier("TEST"));
-        stateScene.AddState(state);
-        stateScene.AddState(state2);
-        stateScene.SetStateFromId(state2.Id);
-        runtime.Scenes?.Add(stateScene);
+        //var stateScene = new StateScene(new Identifier("TEST"));
+        //stateScene.AddState(state);
+        //stateScene.AddState(state2);
+        //stateScene.SetStateFromId(state2.Id);
+        //runtime.Scenes?.Add(stateScene);
 
 
         // ===== BASIC SCENES =====

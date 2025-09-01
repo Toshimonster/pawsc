@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using DotnetBleServer.Gatt.Description;
 using PAWSC.Controllers.Implementations.Gatt;
 using PAWSC.Interfaces;
@@ -6,9 +7,16 @@ using SkiaSharp;
 
 namespace PAWSC.Scenes.Implementations;
 
+public record PawsStateDescription
+{
+    public required string Name { get; init; }
+    public required Uri? Placeholder { get; init; }
+}
+
 public interface IPawsState : IIdentifiable
 {
-    public Dictionary<Identifier[], IPawsGif> Definition { get; }
+    public ConcurrentDictionary<Identifier[], IPawsGif> Definition { get; }
+    public PawsStateDescription Description { get; }
 }
 
 public interface IPawsGif : IIdentifiable
@@ -50,7 +58,13 @@ public record PawsGif(Identifier Id) : IPawsGif
 public class BaseState(Identifier id) : IPawsState
 {
     public Identifier Id { get; init; } = id;
-    public Dictionary<Identifier[], IPawsGif> Definition { get; } = new();
+    public ConcurrentDictionary<Identifier[], IPawsGif> Definition { get; } = new();
+
+    public PawsStateDescription Description { get; } = new PawsStateDescription()
+    {
+        Name = string.Empty,
+        Placeholder = null,
+    };
 
     public void AddGif(Identifier[] interfaces, IPawsGif gif)
     {
@@ -65,9 +79,9 @@ public class BaseState(Identifier id) : IPawsState
 
 public class StateScene : SkiaSharpRasterScene
 {
-    protected readonly Dictionary<Identifier, IPawsState> States = new();
+    protected readonly ConcurrentDictionary<Identifier, IPawsState> States = new();
 
-    public StateScene(Identifier id, Dictionary<Identifier, IPawsState> definitions): this(id)
+    public StateScene(Identifier id, ConcurrentDictionary<Identifier, IPawsState> definitions): this(id)
     {
         States = definitions;
     }
@@ -76,21 +90,31 @@ public class StateScene : SkiaSharpRasterScene
     {
     }
 
-    public Dictionary<Identifier, IPawsState>.ValueCollection GetAllStates()
+    public ICollection<IPawsState> GetAllStates()
     {
         return States.Values;
     }
 
-    public void AddState(IPawsState state)
+    public bool AddStateIfNotExist(IPawsState state)
     {
-        States.Add(state.Id, state);
+        return States.TryAdd(state.Id, state);
+    }
+
+    public bool RemoveState(IPawsState state)
+    {
+        return RemoveState(state.Id);
+    }
+
+    public bool RemoveState(Identifier id)
+    {
+        return States.Remove(id, out _);
     }
 
     public Identifier? ActiveState
     {
         get
         {
-            if (_activeState is null && States.Count > 0)
+            if (_activeState is null && !States.IsEmpty)
             {
                 _activeState = States.Keys.FirstOrDefault();
             }
@@ -201,6 +225,7 @@ public class StateScene : SkiaSharpRasterScene
 
     private Task<string> OnGetStateList()
     {
+        Console.WriteLine("To Ret: \n" + string.Join(",", States.Keys));
         return Task.FromResult(string.Join(",", States.Keys));
     }
 }

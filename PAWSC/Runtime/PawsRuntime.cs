@@ -96,6 +96,28 @@ public readonly struct Identifier : IEquatable<Identifier>
     {
         return !left.Equals(right);
     }
+
+    public static Identifier FromRawString(string raw)
+    {
+        if (raw == null) throw new ArgumentNullException(nameof(raw));
+
+        const string prefix = "ID[";
+        const string suffix = "]";
+
+        if (!raw.StartsWith(prefix) || !raw.EndsWith(suffix))
+        {
+            throw new FormatException($"Invalid Identifier format: '{raw}'. Expected format 'ID[xxx]'.");
+        }
+
+        var inner = raw.Substring(prefix.Length, raw.Length - prefix.Length - suffix.Length);
+
+        if (string.IsNullOrWhiteSpace(inner))
+        {
+            throw new FormatException("Identifier cannot be empty.");
+        }
+
+        return new Identifier(inner);
+    }
 }
 
 /// <summary>
@@ -164,7 +186,9 @@ public class PawsRuntime : PawsEventHandler, IDisposable
             await Interfaces.Initialise(this);
             await Controllers.Initialise(this);
             await Scenes.Initialise(this);
-            _drawThread.SetScene(Scenes.GetAllValues().FirstOrDefault());
+            var initScene = Scenes.GetAllValues().FirstOrDefault();
+            Broadcast(PawsCommands.Log.Info($"Starting scene as {initScene}:{initScene?.Id}"));
+            _drawThread.SetScene(initScene);
             _drawThread.Start();
             await Interfaces.AfterInitialise(this);
             await Controllers.AfterInitialise(this);

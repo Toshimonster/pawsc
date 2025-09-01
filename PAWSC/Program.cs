@@ -17,7 +17,7 @@ class Program
             using var runtime = new PawsRuntime();
             runtime.Subscribe<PawsCommands.Log>((e) =>
             {
-                Console.WriteLine($"[{e.Level}] {e.Message}");
+                Console.WriteLine($"[{e.Source}][{e.Level}] {e.Message}");
                 if (e.Exception is not null)
                 {
                     Console.WriteLine(e.Exception.ToString());
@@ -89,6 +89,9 @@ class Program
             runtime.Controllers.Add(testController);
             var terminalController = new TerminalController(Identifier.Random());
             runtime.Controllers.Add(terminalController);
+
+            var stateController = new FileSystemStateController(Identifier.Random(), "/home/toshi/State Assets");
+            runtime.Controllers.Add(stateController);
             Console.WriteLine("✅ Controllers added successfully");
         }
         catch (Exception ex)

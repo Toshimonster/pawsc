@@ -13,6 +13,7 @@ namespace DotnetBleServer.Gatt.BlueZModel
                 {CharacteristicFlags.Read, "read"},
                 {CharacteristicFlags.Write, "write"},
                 {CharacteristicFlags.Notify, "notify"},
+                {CharacteristicFlags.Indicate, "indicate"},
                 {CharacteristicFlags.WritableAuxiliaries, "writable-auxiliaries"}
             };
 

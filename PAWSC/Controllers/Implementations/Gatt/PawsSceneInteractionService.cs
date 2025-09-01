@@ -106,7 +106,7 @@ public class PawsSceneInteractionService(PawsRuntime runtime) : IGattService
 
         public OutputEventsCharacteristic(PawsRuntime runtime): base(
             UuidRegistry.SceneInteractionCharacteristics.OutputEvents,
-            CharacteristicFlags.Notify)
+            CharacteristicFlags.Indicate | CharacteristicFlags.Read)
         {
             Runtime = runtime;
             runtime.Subscribe<PawsCommands.GattSceneOutput>(OnSceneOutput);
