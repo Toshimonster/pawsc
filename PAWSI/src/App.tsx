@@ -10,7 +10,13 @@ import {
 	setupIonicReact,
 } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
-import { apps, bluetooth, brush, cog, videocam, flask } from "ionicons/icons";
+import { 
+	apps, 
+	bluetooth, 
+	gameController, 
+	settings, 
+	flask 
+} from "ionicons/icons";
 
 /* Core CSS required for Ionic components to work properly */
 import "@ionic/react/css/core.css";
@@ -30,105 +36,74 @@ import "@ionic/react/css/display.css";
 
 /* Theme variables */
 import "./theme/variables.css";
-import { PixelDraw } from "./pages/PixelDraw";
-import { States } from "./pages/States";
-import { Status } from "./pages/Status";
-import { VideoSharePage } from "./pages/VideoSharePage";
-import { BluetoothConnectPage } from "./pages/BluetoothConnectPage";
-import TestPage from "./pages/TestPage";
-import React, { useContext, useState } from "react";
-import {
-	PawsDeviceContext,
-	PawsDeviceProvider,
-} from "./components/contexts/PawsContext";
-import { PawsState } from "./components/contexts/PawsDevice";
+import React from "react";
+
+// Import pages
+import BluetoothPage from "./pages/BluetoothPage";
+import DashboardPage from "./pages/DashboardPage";
+import SceneControlPage from "./pages/SceneControlPage";
+import TestModePage from "./pages/TestModePage";
+
+// Import device provider
+import { DeviceProvider } from "./components/contexts/DeviceProvider";
 
 setupIonicReact();
 
 const App: React.FC = () => {
 	return (
-		<PawsDeviceProvider>
-			<IonApp>
-				<PawsRouter />
-			</IonApp>
-		</PawsDeviceProvider>
+		<IonApp>
+			<PawsRouter />
+		</IonApp>
 	);
 };
 
 function PawsRouter() {
-	// Bluetooth initialised
-	const [ready, setReady] = useState(false); //!Paws || Paws.state >= PawsState.READY;
-	/**
-	 * Wraps a component that is dependent on bluetooth devices;
-	 * Will redirect to /bluetooth if the device is not ready
-	 */
-	const IsDependant = (props: { children: JSX.Element }): JSX.Element => {
-		return ready ? props.children : <Redirect to="/bluetooth" />;
-	};
-
 	return (
-		<IonReactRouter>
-			<IonTabs>
-				<IonRouterOutlet>
-					<Route exact path="/bluetooth">
-						<BluetoothConnectPage setReady={setReady} />
-					</Route>
-					<Route exact path="/pixeldraw">
-						<IsDependant>
-							<PixelDraw />
-						</IsDependant>
-					</Route>
-					<Route exact path="/states">
-						<IsDependant>
-							<States />
-						</IsDependant>
-					</Route>
-					<Route exact path="/status">
-						<IsDependant>
-							<Status />
-						</IsDependant>
-					</Route>
-					<Route exact path="/video">
-						<IsDependant>
-							<VideoSharePage />
-						</IsDependant>
-					</Route>
-					<Route exact path="/test">
-						<TestPage />
-					</Route>
-					<Route>
-						<Redirect to="/bluetooth" />
-					</Route>
-				</IonRouterOutlet>
-				<IonTabBar slot="bottom">
-					<IonTabButton tab="bluetooth" href="/bluetooth">
-						<IonIcon aria-hidden="true" icon={bluetooth} />
-						<IonLabel>Bluetooth</IonLabel>
-					</IonTabButton>
+		<DeviceProvider>
+			<IonReactRouter>
+				<IonTabs>
+					<IonRouterOutlet>
+						<Route exact path="/dashboard">
+							<DashboardPage />
+						</Route>
+						<Route exact path="/scene-control">
+							<SceneControlPage />
+						</Route>
+						<Route exact path="/test-mode">
+							<TestModePage />
+						</Route>
+						<Route exact path="/bluetooth">
+							<BluetoothPage />
+						</Route>
+						<Route exact path="/">
+							<Redirect to="/dashboard" />
+						</Route>
+					</IonRouterOutlet>
 
-					<IonTabButton tab="states" href="/states" disabled={!ready}>
-						<IonIcon aria-hidden="true" icon={apps} />
-						<IonLabel>States</IonLabel>
-					</IonTabButton>
-					<IonTabButton tab="status" href="/status" disabled={!ready}>
-						<IonIcon aria-hidden="true" icon={cog} />
-						<IonLabel>Status</IonLabel>
-					</IonTabButton>
-					<IonTabButton tab="pixeldraw" href="/pixeldraw" disabled={!ready}>
-						<IonIcon aria-hidden="true" icon={brush} />
-						<IonLabel>Pixel Draw</IonLabel>
-					</IonTabButton>
-					<IonTabButton tab="video" href="/video" disabled={!ready}>
-						<IonIcon aria-hidden="true" icon={videocam} />
-						<IonLabel>Video Share</IonLabel>
-					</IonTabButton>
-					<IonTabButton tab="test" href="/test">
-						<IonIcon aria-hidden="true" icon={flask} />
-						<IonLabel>Test</IonLabel>
-					</IonTabButton>
-				</IonTabBar>
-			</IonTabs>
-		</IonReactRouter>
+					<IonTabBar slot="bottom">
+						<IonTabButton tab="dashboard" href="/dashboard">
+							<IonIcon icon={apps} />
+							<IonLabel>Dashboard</IonLabel>
+						</IonTabButton>
+
+						<IonTabButton tab="scene-control" href="/scene-control">
+							<IonIcon icon={gameController} />
+							<IonLabel>Scenes</IonLabel>
+						</IonTabButton>
+
+						<IonTabButton tab="test-mode" href="/test-mode">
+							<IonIcon icon={flask} />
+							<IonLabel>Test</IonLabel>
+						</IonTabButton>
+
+						<IonTabButton tab="bluetooth" href="/bluetooth">
+							<IonIcon icon={bluetooth} />
+							<IonLabel>Connection</IonLabel>
+						</IonTabButton>
+					</IonTabBar>
+				</IonTabs>
+			</IonReactRouter>
+		</DeviceProvider>
 	);
 }
 
