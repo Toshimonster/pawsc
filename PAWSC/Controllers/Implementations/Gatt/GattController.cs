@@ -130,8 +130,9 @@ public class GattController(Identifier id, string localName = "ToshiProto") : Pa
         }
     }
 
-    private async Task StartAdvertisement(ServerContext serverContext)
+    private async Task StartAdvertisement(ServerContext serverContext, int attemptNo = 0)
     {
+        const int maxAttempts = 3;
         try
         {
             var mgr = new AdvertisingManager(serverContext);
@@ -141,8 +142,13 @@ public class GattController(Identifier id, string localName = "ToshiProto") : Pa
         }
         catch (Exception ex)
         {
-            Runtime?.Broadcast(PawsCommands.Log.Error($"Failed to start advertisement: {ex.Message}", ex));
-            // Don't throw - advertisement failure shouldn't prevent GATT registration
+            Runtime?.Broadcast(PawsCommands.Log.Error($"Failed to start advertisement, attempt {attemptNo}: {ex.Message}", ex));
+            if (attemptNo >= maxAttempts)
+            {
+                throw;
+            }
+
+            await StartAdvertisement(serverContext, attemptNo + 1);
         }
     }
 
