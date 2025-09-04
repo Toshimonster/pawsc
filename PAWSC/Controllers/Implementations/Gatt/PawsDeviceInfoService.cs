@@ -7,7 +7,7 @@ public class PawsDeviceInfoService : IGattService
     public GattServiceDescription Instance { get; } = new()
     {
         UUID = UuidRegistry.DeviceInfoService.ToString(),
-        Primary = false,
+        Primary = true,
         GattCharacteristicDescriptions =
         {
             new TimestampCharacteristic(),
@@ -42,7 +42,7 @@ public class PawsDeviceInfoService : IGattService
                 raw = raw.Split(" ").FirstOrDefault() ?? "";
                 if (double.TryParse(raw.Trim(), out double milliDegrees))
                 {
-                    return EncodeFromDouble(milliDegrees);
+                    return EncodeFromDouble(milliDegrees / 1000000);
                 }
                 else
                 {
