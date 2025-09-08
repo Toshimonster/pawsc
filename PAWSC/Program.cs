@@ -85,12 +85,17 @@ class Program
         try
         {
             // Add Bluetooth controller if available
-            var testController = new TestController(Identifier.Random());
-            runtime.Controllers.Add(testController);
+            //var testController = new TestController(Identifier.Random());
+            //runtime.Controllers.Add(testController);
             var terminalController = new TerminalController(Identifier.Random());
             runtime.Controllers.Add(terminalController);
 
-            var stateController = new FileSystemStateController(Identifier.Random(), "/home/toshi/State Assets");
+            var filepath = "/home/toshi/State Assets";
+            if (!Path.Exists(filepath))
+            {
+                filepath = "/home/toshi/Documents/Personal/Proto/ToshiProto/State Assets";
+            }
+            var stateController = new FileSystemStateController(Identifier.Random(), filepath);
             runtime.Controllers.Add(stateController);
             Console.WriteLine("✅ Controllers added successfully");
         }

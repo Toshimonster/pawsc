@@ -187,8 +187,15 @@ public class PawsRuntime : PawsEventHandler, IDisposable
             await Controllers.Initialise(this);
             await Scenes.Initialise(this);
             var initScene = Scenes.GetAllValues().FirstOrDefault();
-            Broadcast(PawsCommands.Log.Info($"Starting scene as {initScene}:{initScene?.Id}"));
-            _drawThread.SetScene(initScene);
+            if (initScene is null)
+            {
+                Broadcast(PawsCommands.Log.Warn("Could not find scene to start as"));
+            }
+            else
+            {
+                Broadcast(PawsCommands.Log.Info($"Starting scene as {initScene}:{initScene?.Id}"));
+                _drawThread.SetScene(initScene);
+            }
             _drawThread.Start();
             await Interfaces.AfterInitialise(this);
             await Controllers.AfterInitialise(this);
