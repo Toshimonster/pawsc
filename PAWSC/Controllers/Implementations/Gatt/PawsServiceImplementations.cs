@@ -7,6 +7,7 @@ using DotnetBleServer.Gatt.Description;
 using PAWSC.Runtime;
 using PAWSC.Scenes;
 using PAWSC.Scenes.Implementations;
+using PAWSC.Scenes.Implementations.State;
 
 namespace PAWSC.Controllers.Implementations.Gatt;
 
